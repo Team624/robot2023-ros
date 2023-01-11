@@ -6,18 +6,7 @@ server_ip: "10.06.24.2"
 table_name: "SmartDashboard"
 
 # Wanted Output Data ("number", "string", "boolean")
-output_data: [{name: "/auto/shooter/state", type: "string", default: "idle"},
-              {name: "/auto/flywheel/state", type: "string", default: "idle"},
-              {name: "/auto/hood/state", type: "string", default: "idle"},
-              {name: "/auto/flywheel/wanted/rpm", type: "number", default: 0.0},
-              {name: "/pathTable/startPathIndex", type: "number", default: -1.0},
-              {name: "/vision/rotationAngle", type: "number", default: 0.0},
-              {name: "/vision/distanceAngle", type: "number", default: 0.0},
-              {name: "/vision/quickTurn", type: "number", default: 0.0},
-              {name: "/ball/rotationAngle", type: "number", default: 0.0},
-              {name: "/ball/ballArea", type: "number", default: 0.0},
-              {name: "/auto/intake/state", type: "string", default: "retract"},
-              {name: "/auto/color/state", type: "string", default: "enable"}]
+output_data: [{name: "/pathTable/startPathIndex", type: "number", default: -1.0}]
 
 # Wanted Input Data ("number", "string", "boolean")
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 
@@ -25,8 +14,6 @@ input_data: [{name: "/auto/state", type: "boolean", default: false},
              {name: "/pathTable/status/path", type: "number", default: 0.0},
              {name: "/pathTable/status/point", type: "number", default: 0.0},
              {name: "/pathTable/status/finishedPath", type: "string", default: "false 0"},
-             {name: "/auto/numBall", type: "number", default: 0.0},
              {name: "/pose/th", type: "number", default: 0.0},
              {name: "/pose/x", type: "number", default: 0.0},
-             {name: "/pose/y", type: "number", default: 0.0},
-             {name: "/ball/isBlue", type: "boolean", default: true}]
+             {name: "/pose/y", type: "number", default: 0.0}]
