@@ -7,12 +7,13 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose
 from nav_msgs.msg import Odometry, Path
 import time
 from auton_scripts.auton_modules.path import AutoPath, AutoGoal
-from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular, BoolArray
 import os
 from auton_scripts.auton_modules.state_machine import StateMachine
 import rospkg
 import importlib
 import auton_scripts.auton_modules.state as state
+from autonomous.msg import GoalPath, Goal
+
 
 # Imports all autons
 rospack = rospkg.RosPack()

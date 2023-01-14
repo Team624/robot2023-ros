@@ -1,9 +1,9 @@
-from std_msgs.msg import Float32, Float64, Bool
-from geometry_msgs.msg import Pose
+# import tf
+# from std_msgs.msg import Float32, Float64, Bool
+# from geometry_msgs.msg import Pose
+# #from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
 from datetime import datetime
 import json
-from autonomous.msg import GoalPath, Goal
-
 
 class Autons:
 
@@ -120,40 +120,40 @@ class AutoPath:
         self.angular_tolerance_inner = ang_tolerance_inner
         self.ignore_angular_tolerance = ignore_ang_tolerance
 
-    def get_path(self, list_of_goals):
-        # Put list into msg
-        goal_path = GoalPath()
-        goal_path.goals = list_of_goals
+    # def get_path(self):
+    #     # Put list into msg
+    #     goal_path = GoalPath()
+    #     goal_path.goals = self.goals
 
-        constants = Constants()
-        constants.kP = self.constants_kP
-        constants.kA = self.constants_kA
-        constants.kB = self.constants_kB
+    #     constants = Constants()
+    #     constants.kP = self.constants_kP
+    #     constants.kA = self.constants_kA
+    #     constants.kB = self.constants_kB
 
-        linear = Linear()
-        linear.max_linear_speed = self.max_linear_speed
-        linear.min_linear_speed = self.min_linear_speed
-        linear.max_linear_acceleration = self.max_linear_acceleration
-        linear.linear_tolerance_outer = self.linear_tolerance_outer
-        linear.linear_tolerance_inner = self.linear_tolerance_inner
+    #     linear = Linear()
+    #     linear.max_linear_speed = self.max_linear_speed
+    #     linear.min_linear_speed = self.min_linear_speed
+    #     linear.max_linear_acceleration = self.max_linear_acceleration
+    #     linear.linear_tolerance_outer = self.linear_tolerance_outer
+    #     linear.linear_tolerance_inner = self.linear_tolerance_inner
 
-        angular = Angular()
-        angular.max_angular_speed = self.max_angular_speed
-        angular.min_angular_speed = self.min_angular_speed
-        angular.max_angular_acceleration = self.max_angular_acceleration
-        angular.angular_tolerance_outer = self.angular_tolerance_outer
-        angular.angular_tolerance_inner = self.angular_tolerance_inner
-        angular.ignore_angular_tolerance = self.ignore_angular_tolerance
+    #     angular = Angular()
+    #     angular.max_angular_speed = self.max_angular_speed
+    #     angular.min_angular_speed = self.min_angular_speed
+    #     angular.max_angular_acceleration = self.max_angular_acceleration
+    #     angular.angular_tolerance_outer = self.angular_tolerance_outer
+    #     angular.angular_tolerance_inner = self.angular_tolerance_inner
+    #     angular.ignore_angular_tolerance = self.ignore_angular_tolerance
         
-        goal_path.forward_movement_only = self.forward_movement_only
+    #     goal_path.forward_movement_only = self.forward_movement_only
 
-        goal_path.end_of_path_stop = self.end_of_path_stop
+    #     goal_path.end_of_path_stop = self.end_of_path_stop
 
-        goal_path.constants = constants
-        goal_path.linear = linear
-        goal_path.angular = angular
+    #     goal_path.constants = constants
+    #     goal_path.linear = linear
+    #     goal_path.angular = angular
 
-        return goal_path
+    #     return goal_path
 
 class AutoGoal:
 
@@ -163,12 +163,17 @@ class AutoGoal:
 
         self.t = t
 
-    def get_goal(self):
-        goal = Goal()
+    # def get_goal(self):
+    #     goal = Goal()
 
-        pose = Pose()
-        pose.position.x = self.x
-        pose.position.y = self.y
+    #     pose = Pose()
+    #     pose.position.x = self.position_x
+    #     pose.position.y = self.position_y
 
-        goal.pose = pose
-        return goal
+    #     quaternion = tf.transformations.quaternion_from_euler(0, 0, self.th, 'sxyz')
+
+    #     pose.orientation.z = quaternion[2]
+    #     pose.orientation.w = quaternion[3]
+
+    #     goal.pose = pose
+    #     return goal

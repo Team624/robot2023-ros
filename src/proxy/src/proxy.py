@@ -6,7 +6,7 @@ import rospy
 from std_msgs.msg import Float32, Bool, String, Float32MultiArray
 import threading
 from geometry_msgs.msg import Twist
-from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
+from autonomous.msg import GoalPath, Goal
 
 # Creates proxy node
 rospy.init_node('proxy')

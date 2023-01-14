@@ -3,7 +3,7 @@ import json
 import rospy
 from std_msgs.msg import Float32, Float64, Bool, String, Float32MultiArray
 from geometry_msgs.msg import Pose, PoseWithCovarianceStamped
-from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
+# from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
 from .path import AutoGoal, AutoPath, Autons
 import time
 import rospkg 
@@ -155,3 +155,152 @@ class StartPath(State):
         """ This gets the path data from the json file and publishes to diff_drive """
         # Checks for updated data
         self.ros_node.publish("/pathTable/startPathIndex", Float32, index, latching = True)
+        
+
+# This is ROBOT SPECIFIC
+class Intake(State):
+
+    # Actions
+    def deploy_intake(self):
+        """ This publishes a msg to deploy the intake """
+        intake_state = String()
+        intake_state.data = "deploy"
+
+        self.ros_node.publish("/auto/intake/state", String, intake_state, latching = True)
+        rospy.loginfo("Deployed Intake")
+
+    def retract_intake(self):
+        """ This publishes a msg to retract the intake """
+        intake_state = String()
+        intake_state.data = "retract"
+
+        self.ros_node.publish("/auto/intake/state", String, intake_state, latching = True)
+        rospy.loginfo("Retracted Intake")
+
+class Color(State):
+
+    # Actions
+    def enable_color(self):
+        """ This publishes a msg to deploy the intake """
+        color_state = String()
+        color_state.data = "enable"
+
+        self.ros_node.publish("/auto/color/state", String, color_state, latching = True)
+        rospy.loginfo("Enabled Color Sensor")
+
+    def disable_color(self):
+        """ This publishes a msg to retract the intake """
+        color_state = String()
+        color_state.data = "disable"
+
+        self.ros_node.publish("/auto/color/state", String, color_state, latching = True)
+        rospy.loginfo("Disabled Color Sensor")
+
+class Shooter(State):
+
+    # This puts the shooter in idle mode and allows other sub systems to do specific functions
+    def idle(self):
+        """ This puts the shooter in idle mode """
+        shooter_state = String()
+        shooter_state.data = "idle"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Idle")
+    
+    # Overrides the other states because it needs to control all three subsystems 
+    def hide_shoot(self):
+        """ This starts the turret tracking, adjusting rpm, and hood angle """
+        shooter_state = String()
+        shooter_state.data = "hide_shoot"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Hide Shoot")
+    
+    def hide_poop(self):
+        """ This starts the turret tracking, adjusting rpm, and hood angle """
+        shooter_state = String()
+        shooter_state.data = "hide_poop"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Hide Poop")
+
+    def lob_prime(self):
+        """ This starts the turret tracking, adjusting rpm, and hood angle """
+        shooter_state = String()
+        shooter_state.data = "lob_prime"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Lob Prime")
+
+    def lob_shoot(self):
+        """ This starts the turret tracking, adjusting rpm, and hood angle """
+        shooter_state = String()
+        shooter_state.data = "lob_shoot"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Lob Shoot")
+
+    def start_prime(self):
+        """ This starts the turret tracking, adjusting rpm, and hood angle """
+        shooter_state = String()
+        shooter_state.data = "prime"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Prime")
+
+    def start_shoot(self):
+        """ This makes the turret begin to shoot """
+        shooter_state = String()
+        shooter_state.data = "shoot"
+
+        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
+        rospy.loginfo("Shooter Shooting")
+
+class Flywheel(Shooter):
+
+    # Conditions
+    def reached_rpm(self, rpm):
+        """ Checks if the fly wheel has reached the wanted rpm """
+        if self.ros_node.get_data("/auto/flywheel/current/rpm") == rpm:
+            return True
+        return False
+
+    # Actions (Only works if Shooter is in idle)
+    def idle_flywheel(self):
+        """ This puts the shooter into idle mode """
+        flywheel_state = String()
+        flywheel_state.data = "idle"
+
+        self.ros_node.publish("/auto/flywheel/state", String, flywheel_state, latching = True)
+        rospy.loginfo("Flywheel Idle")
+
+    def start_spin_up(self, rpm):
+        """ This starts the robot's spin up to a specific rpm """
+        flywheel_state = String()
+        flywheel_state.data = "spin_up"
+
+        flywheel_rpm = Float32()
+        flywheel_rpm.data = rpm
+
+        self.ros_node.publish("/auto/flywheel/state", String, flywheel_state, latching = True)
+        self.ros_node.publish("/auto/flywheel/wanted/rpm", Float32, flywheel_rpm, latching = True)
+        rospy.loginfo("Flywheel Spinup")
+
+class Hood(Shooter):
+
+    # Actions (Only works if Shooter is in idle)
+    def idle_hood(self):
+        """ This puts the hood into idle mode """
+        hood_state = String()
+        hood_state.data = "idle"
+
+        self.ros_node.publish("/auto/hood/state", String, hood_state, latching = True)
+        rospy.loginfo("Hood Idle")
+
+    def actuate_hood(self, angle):
+        """ This adjusts the hood to the given angle """
+        hood_state = String()
+        hood_state.data = "actuate"
+
+        self.ros_node.publish("/auto/hood/state", String, hood_state, latching = True)
+        rospy.loginfo("Hood Actuate")
