@@ -16,7 +16,7 @@ def read_json():
     """ This reads the auton data and saves it to a list to be used """
     try:
         rospack = rospkg.RosPack()
-        file_path = rospack.get_path('autonomous') + "/src/auton_scripts/auton_modules/path-editor/data.txt"
+        file_path = rospack.get_path('autonomous') + "/src/auton_scripts/auton_modules/path-editor/data.json"
         with open(file_path) as json_file:
             json_data = json.load(json_file)
 
