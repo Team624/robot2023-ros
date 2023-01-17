@@ -25,7 +25,6 @@ for i in os.listdir(path):
         autons.append(importlib.import_module("auton_scripts." + i[0: len(i) -3]))
 
 class ROSNode:
-
     def __init__(self):
         # Create ROS node
         rospy.init_node('autonomous')
@@ -63,12 +62,7 @@ class ROSNode:
             rospy.logwarn("15 seconds have passed since the start of auton")
             self.over_time = True
         return passed_time
-
-    def stop_diff_drive(self):
-        msg = Bool()
-        msg.data = True
-        self.publish("/stop_diff_drive", Bool, msg, latching=True)
-
+    
     def subscribe(self, topic_name, data_type):
         """ This sets up the ros subscribers for incoming data """
         # Checks if subscriber exists, if not create one
@@ -109,7 +103,6 @@ class ROSNode:
             if self.state_machine is not None and not self.get_data(self.auto_state_topic):
                 rospy.logwarn("State Machine Reset")
                 self.state_machine.shutdown()
-                self.stop_diff_drive()
                 self.state_machine = None
 
             # State machine was not running and auton was enabled
@@ -142,14 +135,10 @@ class ROSNode:
                                 # This is where I put the publishing of the path
                                 # Loop through all the paths and publish them in seperate topics
                                 for path in auto.paths:
-                                    a = []
-                                    for goal in path.goals:
-                                        a.append(goal.get_goal())
-
-                                    path_data = path.get_path(a)
-                                    path_data.number_of_paths = len(auto.paths)
+                                    path_data = path.get_path()
                                     
                                     path_data.path_index = path.id
+                                    path_data.number_of_paths = len(auto.paths)
                                     self.publish("/auto/paths", GoalPath, path_data, latching = True)
                                     #rospy.loginfo("Published Path, with the name '%s'", path.name)
 

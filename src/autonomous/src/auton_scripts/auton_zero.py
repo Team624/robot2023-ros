@@ -42,10 +42,24 @@ class StartFirstPath(StartPath):
 
     def tick(self):
         if self.finished_path(0):
-            return Final(self.ros_node)
+            return StartSecondPath(self.ros_node)
         return self
 
+class StartSecondPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
 
+    def initialize(self):
+        self.log_state()
+
+    def execute_action(self):
+        self.start_path(1)
+
+    def tick(self):
+        if self.finished_path(1):
+            return Final(self.ros_node)
+        return self
 
 class Final(State):
     """

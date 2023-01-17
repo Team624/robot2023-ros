@@ -19,7 +19,7 @@ def read_json():
         file_path = rospack.get_path('autonomous') + "/src/auton_scripts/auton_modules/path-editor/data.json"
         with open(file_path) as json_file:
             json_data = json.load(json_file)
-
+            
             new_data = []
             for d in json_data:
                 a = Autons(len(new_data))
@@ -28,8 +28,8 @@ def read_json():
 
             global data
             data = new_data
-    except:
-        read_json()
+    except Exception as e:
+        print("Failed to decode data file: ", str(e))
         
 read_json()
 

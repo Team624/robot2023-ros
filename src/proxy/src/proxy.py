@@ -103,7 +103,6 @@ class Proxy:
 
     def _on_new_path(self, msg):
         """ This is the callback function for the subscribers """
-
         self.table.putNumber("/pathTable/numPaths", msg.number_of_paths)
 
         index = 0
@@ -126,8 +125,8 @@ class Proxy:
         total_dist = sum(distances)
 
         times = []
-        headings = [msg.constants.kA]
-        errorA = msg.constants.kB - msg.constants.kA
+        headings = [msg.start_heading]
+        errorA = msg.end_heading - msg.start_heading
         errorB = errorA - (math.pi * 2)
         errorC = errorA + (math.pi * 2)
 
@@ -135,10 +134,10 @@ class Proxy:
         heading_diff = errorA if abs(errorA) < abs(heading_diff) else heading_diff
 
         for distance in distances:
-            times.append((distance/total_dist) * msg.constants.kP)
+            times.append((distance/total_dist) * msg.time)
             headings.append(headings[len(headings)-1] + heading_diff/(float)(len(msg.goals)-1))
         headings.pop(0)
-        headings.append(msg.constants.kB)
+        headings.append(msg.end_heading)
 
         index = 0
         while (index < len(msg.goals)):
@@ -157,7 +156,7 @@ class Proxy:
             self.table.putNumber("/pathTable/path?/point!/X".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.goals[index].pose.position.x)
             self.table.putNumber("/pathTable/path?/point!/Y".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.goals[index].pose.position.y)
             self.table.putNumber("/pathTable/path?/point!/Heading".replace("!", str(index)).replace("?", str(int(msg.path_index))), headings[index])
-            self.table.putNumber("/pathTable/path?/point!/Tolerance".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.linear.min_linear_speed)
+            self.table.putNumber("/pathTable/path?/point!/Tolerance".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.tolerance)
             index += 1
 
     def main(self):
