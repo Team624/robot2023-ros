@@ -29,7 +29,7 @@ def connectionListener(connected, info):
         cond.notify()
 
 if not rospy.get_param("~sim_server", False):
-    server_ip = rospy.get_param('~server_ip', "10.06.24.2")
+    server_ip = rospy.get_param('~server_ip', "127.0.0.1")
 
     NetworkTables.initialize(server=server_ip)
     NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)

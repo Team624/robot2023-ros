@@ -7,7 +7,7 @@ import time
 from .auton_modules.path import AutoPath, AutoGoal
 
 
-from .auton_modules.state import SetIdle, State, StartPath, Intake, Shooter, Hood, Flywheel
+from .auton_modules.state import SetIdle, State, StartPath
 
 # The id of the auton, used for picking auton
 auton_id = 1
@@ -36,9 +36,10 @@ class StartFirstPath(StartPath):
 
     def initialize(self):
         self.log_state()
+        self.start_path(0)
 
     def execute_action(self):
-        self.start_path(0)
+        pass
 
     def tick(self):
         if self.finished_path(0):
@@ -52,10 +53,11 @@ class StartSecondPath(StartPath):
 
     def initialize(self):
         self.log_state()
-
-    def execute_action(self):
         self.start_path(1)
 
+    def execute_action(self):
+        pass
+        
     def tick(self):
         if self.finished_path(1):
             return Final(self.ros_node)
@@ -93,18 +95,9 @@ class Shutdown(SetIdle):
 
 def start(ros_node):
     # Pick which topics to subscribe to
-    ros_node.subscribe("/diff_drive_go_to_goal/distance_to_goal", Float32)
-    # ros_node.subscribe("/diff_drive/waypoints_achieved", BoolArray)
-    ros_node.subscribe("/diff_drive/path_achieved", Bool)
-
-    ros_node.subscribe("/auto/turret/current/angle", Float32)
-    ros_node.subscribe("/auto/flywheel/current/rpm", Float32)
-    ros_node.subscribe("/auto/hood/current/angle", Float32)
-
     ros_node.subscribe("/pathTable/status/path", Float32)
     ros_node.subscribe("/pathTable/status/point", Float32)
     ros_node.subscribe("/pathTable/status/finishedPath", String)
-    ros_node.subscribe("/auto/numBall", Float32)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown
