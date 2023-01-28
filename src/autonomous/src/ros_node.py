@@ -1,18 +1,14 @@
 #! /usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Float32, Float64, Bool, Float32MultiArray
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose
-from nav_msgs.msg import Odometry, Path
+from std_msgs.msg import Float32, Float64, Bool, Float32MultiArray, String
 import time
-from auton_scripts.auton_modules.path import AutoPath, AutoGoal
 import os
 from auton_scripts.auton_modules.state_machine import StateMachine
 import rospkg
 import importlib
 import auton_scripts.auton_modules.state as state
-from autonomous.msg import GoalPath, Goal
+from autonomous.msg import Path
 
 
 # Imports all autons
@@ -31,6 +27,7 @@ class ROSNode:
         self.rate = float(rospy.get_param('rate', 50))
         self.auto_state_topic = rospy.get_param('auto_state_topic', "/auto/state")
         self.auto_select_topic = rospy.get_param('auto_select_topic', "/auto/select")
+        self.finished_path_topic = rospy.get_param('finished_path_topic', "/pathTable/status/finishedPath")
 
         self._data = {}
         self._publishers = {}
@@ -42,6 +39,7 @@ class ROSNode:
         # Needed for determining when to start auton
         self.subscribe(self.auto_state_topic, Bool)
         self.subscribe(self.auto_select_topic, Float32)
+        self.subscribe(self.finished_path_topic, String)
 
         # Used for timing events
         self.start_time = time.time()
@@ -139,7 +137,8 @@ class ROSNode:
                                     
                                     path_data.path_index = path.id
                                     path_data.number_of_paths = len(auto.paths)
-                                    self.publish("/auto/paths", GoalPath, path_data, latching = True)
+                                    path_data.name = auto.title
+                                    self.publish("/auto/paths", Path, path_data, latching = True)
                                     #rospy.loginfo("Published Path, with the name '%s'", path.name)
 
                                 # Todo add this as a seperate subscriber to the proxy

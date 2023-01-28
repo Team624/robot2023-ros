@@ -1,12 +1,5 @@
 import rospy
-from std_msgs.msg import Float32, Float64, Bool, String
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose
-from nav_msgs.msg import Odometry, Path
-import time
-from .auton_modules.path import AutoPath, AutoGoal
-
-
+from std_msgs.msg import Float32, String
 from .auton_modules.state import SetIdle, State, StartPath
 
 # The id of the auton, used for picking auton
@@ -96,7 +89,6 @@ class Shutdown(SetIdle):
 def start(ros_node):
     # Pick which topics to subscribe to
     ros_node.subscribe("/pathTable/status/path", Float32)
-    ros_node.subscribe("/pathTable/status/point", Float32)
     ros_node.subscribe("/pathTable/status/finishedPath", String)
 
     # Return the wanted Start and Shutdown state

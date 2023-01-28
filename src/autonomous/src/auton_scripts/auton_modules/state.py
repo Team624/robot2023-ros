@@ -1,10 +1,7 @@
-from datetime import datetime
 import json
 import rospy
-from std_msgs.msg import Float32, Float64, Bool, String, Float32MultiArray
-from geometry_msgs.msg import Pose, PoseWithCovarianceStamped
-# from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
-from .path import AutoGoal, AutoPath, Autons
+from std_msgs.msg import Float32, Float32MultiArray
+from .path import Autons
 import time
 import rospkg 
 import math

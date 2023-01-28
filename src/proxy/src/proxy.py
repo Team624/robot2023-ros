@@ -6,7 +6,7 @@ import rospy
 from std_msgs.msg import Float32, Bool, String, Float32MultiArray
 import threading
 from geometry_msgs.msg import Twist
-from autonomous.msg import GoalPath, Goal
+from autonomous.msg import Path
 
 # Creates proxy node
 rospy.init_node('proxy')
@@ -64,7 +64,7 @@ class Proxy:
         self._subscribers = []
 
         # For sending path data
-        rospy.Subscriber("/auto/paths", GoalPath, self._on_new_path)
+        rospy.Subscriber("/auto/paths", Path, self._on_new_path)
 
         # For resetting pose
         rospy.Subscriber("/auto/robot_set_pose", Float32MultiArray, self._on_reset_pose)
@@ -102,62 +102,22 @@ class Proxy:
         self.table.putNumberArray("/pathTable/startPose", msg.data)
 
     def _on_new_path(self, msg):
-        """ This is the callback function for the subscribers """
-        self.table.putNumber("/pathTable/numPaths", msg.number_of_paths)
-
-        index = 0
-        distances = []
-        while (index < len(msg.goals)):
-            if (index == len(msg.goals)-1):
-                distances.append(0)
-            else:
-                x_diff = msg.goals[index + 1].pose.position.x - msg.goals[index].pose.position.x
-                y_diff = msg.goals[index + 1].pose.position.y - msg.goals[index].pose.position.y
-                dist = math.sqrt(math.pow(x_diff, 2) + math.pow(y_diff, 2))
-                distances.append(dist)
-            index += 1
+        """ This is the callback for publishing new paths from the autonomous node """
         
-
-        # Modify first and last point to smoothly increase velocity
-        smooth_constant = 5.0 
-        distances[0] *= smooth_constant
-        distances[len(msg.goals)-1] *= smooth_constant
-        total_dist = sum(distances)
-
-        times = []
-        headings = [msg.start_heading]
-        errorA = msg.end_heading - msg.start_heading
-        errorB = errorA - (math.pi * 2)
-        errorC = errorA + (math.pi * 2)
-
-        heading_diff = errorB if abs(errorB) < abs(errorC) else errorC
-        heading_diff = errorA if abs(errorA) < abs(heading_diff) else heading_diff
-
-        for distance in distances:
-            times.append((distance/total_dist) * msg.time)
-            headings.append(headings[len(headings)-1] + heading_diff/(float)(len(msg.goals)-1))
-        headings.pop(0)
-        headings.append(msg.end_heading)
-
-        index = 0
-        while (index < len(msg.goals)):
-            if (index == len(msg.goals)-1):
-                x_diff = 0
-                y_diff = 0
-                self.table.putNumber("/pathTable/path?/point!/Vx".replace("!", str(index)).replace("?", str(int(msg.path_index))), 0)
-                self.table.putNumber("/pathTable/path?/point!/Vy".replace("!", str(index)).replace("?", str(int(msg.path_index))), 0)
-            else:
-                x_diff = msg.goals[index + 1].pose.position.x - msg.goals[index].pose.position.x
-                y_diff = msg.goals[index + 1].pose.position.y - msg.goals[index].pose.position.y
-                self.table.putNumber("/pathTable/path?/point!/Vx".replace("!", str(index)).replace("?", str(int(msg.path_index))), x_diff/times[index])
-                self.table.putNumber("/pathTable/path?/point!/Vy".replace("!", str(index)).replace("?", str(int(msg.path_index))), y_diff/times[index])
-
-            self.table.putNumber("/pathTable/path?/numPoints".replace("?", str(int(msg.path_index))), len(msg.goals))
-            self.table.putNumber("/pathTable/path?/point!/X".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.goals[index].pose.position.x)
-            self.table.putNumber("/pathTable/path?/point!/Y".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.goals[index].pose.position.y)
-            self.table.putNumber("/pathTable/path?/point!/Heading".replace("!", str(index)).replace("?", str(int(msg.path_index))), headings[index])
-            self.table.putNumber("/pathTable/path?/point!/Tolerance".replace("!", str(index)).replace("?", str(int(msg.path_index))), msg.tolerance)
-            index += 1
+        path_root = f"/pathTable/path{msg.path_index}"
+        
+        self.table.putNumber("/pathTable/num_paths", msg.number_of_paths)
+        
+        self.table.putString("/pathTable/auton_name", msg.name)
+        
+        self.table.putNumber(f"{path_root}/time", msg.time)
+        
+        self.table.putNumber(f"{path_root}/start_heading", msg.start_heading)
+        self.table.putNumber(f"{path_root}/end_heading", msg.end_heading)
+        
+        for i, control_point in enumerate(msg.control_points):
+            self.table.putNumber(f"{path_root}/control_point{i}/X", control_point.x)
+            self.table.putNumber(f"{path_root}/control_point{i}/Y", control_point.y)
 
     def main(self):
         """ This is the main loop """

@@ -1,9 +1,0 @@
-std_msgs/Header header
-float64 start_heading
-float64 end_heading
-float64 tolerance
-bool end_of_path_stop
-float64 path_index
-int32 number_of_paths
-float64 time
-autonomous/Goal[] goals

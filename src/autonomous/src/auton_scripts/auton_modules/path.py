@@ -1,8 +1,6 @@
-from std_msgs.msg import Float32, Float64, Bool
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Point
 from datetime import datetime
-import json
-from autonomous.msg import GoalPath, Goal
+from autonomous.msg import Path
 
 
 class Autons:
@@ -27,70 +25,42 @@ class Autons:
         # Loop through all the paths and update the class
         self.paths = []
         for json_path in json_data["paths"]:
-            goals = []
-            for json_goal in json_path["goals"]:
-                goal = AutoGoal(json_goal["x"], json_goal["y"], json_goal["t"])
-                goals.append(goal)
-            path = AutoPath(len(self.paths), 
-                         goals,
-                         json_path["time"],
-                         json_path["start_heading"], 
-                         json_path["end_heading"], 
-                         json_path["tolerance"],
-                         json_path["name"], 
-                         end_of_path_stop=json_path["end_of_path_stop"])
-            
+            path = AutoPath(len(self.paths), json_path)
             self.paths.append(path)
             
 class AutoPath:
-    def __init__(self, path_id, goals, time, start_heading, end_heading, tolerance, name, end_of_path_stop = True):
+    def __init__(self, path_id, json_data):
         # Returns a tuple converts to list
         self.id = path_id
-        self.name = name
-        self.time = time
-
-        self.max_linear_acceleration = 1E9
-        self.end_of_path_stop = end_of_path_stop
+                
+        self.time = json_data["time"]
+        self.start_heading = json_data["start_heading"]
+        self.end_heading = json_data["end_heading"]
         
-        self.start_heading = start_heading
-        self.end_heading = end_heading
-
-        self.tolerance = tolerance
-        self.goals = goals
-
+        self.control_points = []
+        
+        for point in json_data["control_points"]:
+            self.control_points.append((point["x"], point["y"]))
+        
     def get_path(self):
         ''' Converts class into ros message '''
         
-        goal_path = GoalPath()
-        
-        # Convert every goal into a message
-        msg_goals = []
-        for goal in self.goals:
-            msg_goals.append(goal.get_goal())
+        path = Path()
         
         # Add data to the message
-        goal_path.goals = msg_goals
-        goal_path.time = self.time
-        goal_path.start_heading = self.start_heading
-        goal_path.end_heading = self.end_heading
-        goal_path.end_of_path_stop = self.end_of_path_stop
-        goal_path.tolerance = self.tolerance
-
-        return goal_path
-
-class AutoGoal:
-    def __init__(self, x, y, t):
-        self.x = x
-        self.y = y
-
-        self.t = t
-
-    def get_goal(self):
-        goal = Goal()
-
-        pose = Pose()
-        pose.position.x = self.x
-        pose.position.y = self.y
-
-        goal.pose = pose
-        return goal
+        path.path_index = self.id
+        path.time = self.time
+        
+        path.start_heading = self.start_heading
+        path.end_heading = self.end_heading
+        
+        point_msgs = []
+        
+        for point in self.control_points:
+            point_msg = Point(point[0], point[1], 0)
+            
+            point_msgs.append(point_msg)
+            
+        path.control_points = point_msgs
+        
+        return path

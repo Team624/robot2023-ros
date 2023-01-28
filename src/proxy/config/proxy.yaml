@@ -12,7 +12,6 @@ output_data: [{name: "/pathTable/startPathIndex", type: "number", default: -1.0}
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 
              {name: "/auto/select", type: "number", default: 0.0},
              {name: "/pathTable/status/path", type: "number", default: 0.0},
-             {name: "/pathTable/status/point", type: "number", default: 0.0},
              {name: "/pathTable/status/finishedPath", type: "string", default: "false 0"},
              {name: "/pose/th", type: "number", default: 0.0},
              {name: "/pose/x", type: "number", default: 0.0},
