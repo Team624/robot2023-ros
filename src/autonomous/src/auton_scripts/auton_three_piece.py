@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String
 from .auton_modules.state import SetIdle, State, StartPath
 
 # The id of the auton, used for picking auton
-auton_id = 1
-auton_title = "P Path"
+auton_id = 2
+auton_title = "3 Piece"
 
 # Start of our states
 class Idle(SetIdle):
@@ -53,6 +53,56 @@ class StartSecondPath(StartPath):
         
     def tick(self):
         if self.finished_path(1):
+            return StartThirdPath(self.ros_node)
+        return self
+
+class StartThirdPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
+
+    def initialize(self):
+        self.log_state()
+        self.start_path(2)
+
+    def execute_action(self):
+        pass
+        
+    def tick(self):
+        if self.finished_path(2):
+            return StartFourthPath(self.ros_node)
+        return self
+    
+class StartFourthPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
+
+    def initialize(self):
+        self.log_state()
+        self.start_path(3)
+
+    def execute_action(self):
+        pass
+        
+    def tick(self):
+        if self.finished_path(3):
+            return StartFifthPath(self.ros_node)
+        return self
+    
+class StartFifthPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
+
+    def initialize(self):
+        self.log_state()
+        self.start_path(4)
+
+    def execute_action(self):
+        pass
+    def tick(self):
+        if self.finished_path(4):
             return Final(self.ros_node)
         return self
 
