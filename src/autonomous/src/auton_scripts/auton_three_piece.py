@@ -29,78 +29,11 @@ class StartFirstPath(StartPath):
 
     def initialize(self):
         self.log_state()
-        self.start_path(0)
+        self.start_paths(0, 1, 2, 3, 4)
 
     def execute_action(self):
         pass
 
-    def tick(self):
-        if self.finished_path(0):
-            return StartSecondPath(self.ros_node)
-        return self
-
-class StartSecondPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-        self.start_path(1)
-
-    def execute_action(self):
-        pass
-        
-    def tick(self):
-        if self.finished_path(1):
-            return StartThirdPath(self.ros_node)
-        return self
-
-class StartThirdPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-        self.start_path(2)
-
-    def execute_action(self):
-        pass
-        
-    def tick(self):
-        if self.finished_path(2):
-            return StartFourthPath(self.ros_node)
-        return self
-    
-class StartFourthPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-        self.start_path(3)
-
-    def execute_action(self):
-        pass
-        
-    def tick(self):
-        if self.finished_path(3):
-            return StartFifthPath(self.ros_node)
-        return self
-    
-class StartFifthPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-        self.start_path(4)
-
-    def execute_action(self):
-        pass
     def tick(self):
         if self.finished_path(4):
             return Final(self.ros_node)

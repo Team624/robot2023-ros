@@ -6,7 +6,7 @@ server_ip: "10.6.24.2"
 table_name: "SmartDashboard"
 
 # Wanted Output Data ("number", "string", "boolean")
-output_data: [{name: "/pathTable/startPathIndex", type: "number", default: -1.0}]
+output_data: []
 
 # Wanted Input Data ("number", "string", "boolean")
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 

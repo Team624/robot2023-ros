@@ -5,6 +5,7 @@ from .path import Autons
 import time
 import rospkg 
 import math
+from autonomous.msg import PathStart
 
 global data
 data = []
@@ -114,14 +115,18 @@ class SetIdle(State):
 
     def setIdle(self):
         # Path Idle
-        self.ros_node.publish("/pathTable/startPathIndex", Float32, -1, latching = True)
+        msg = PathStart()
+        msg.path_indexes = []
+        
+        self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
 
 
 
 class StartPath(State):
 
     # Actions
-    def start_path(self, index):
-        """ This gets the path data from the json file and publishes to diff_drive """
-        # Checks for updated data
-        self.ros_node.publish("/pathTable/startPathIndex", Float32, index, latching = True)
+    def start_paths(self, *indexes):
+        msg = PathStart()
+        msg.path_indexes = list(indexes)
+        
+        self.ros.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)

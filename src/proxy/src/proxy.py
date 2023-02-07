@@ -6,7 +6,7 @@ import rospy
 from std_msgs.msg import Float32, Bool, String, Float32MultiArray
 import threading
 from geometry_msgs.msg import Twist
-from autonomous.msg import Path
+from autonomous.msg import Path, PathStart
 
 # Creates proxy node
 rospy.init_node('proxy')
@@ -68,6 +68,9 @@ class Proxy:
 
         # For resetting pose
         rospy.Subscriber("/auto/robot_set_pose", Float32MultiArray, self._on_reset_pose)
+        
+        # For starting paths
+        rospy.Subscriber("/pathTable/startPathIndex", PathStart, self._on_path_start)
 
     def subscribe(self, topic_name, data_type):
         """ This sets up the ros subscribers for incoming data """
@@ -100,6 +103,9 @@ class Proxy:
 
     def _on_reset_pose(self, msg):
         self.table.putNumberArray("/pathTable/startPose", msg.data)
+        
+    def _on_path_start(self, msg):
+        self.table.putNumberArray("/pathTable/startPathIndex", msg.path_indexes)
 
     def _on_new_path(self, msg):
         """ This is the callback for publishing new paths from the autonomous node """
