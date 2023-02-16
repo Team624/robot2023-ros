@@ -1,6 +1,6 @@
 import json
 import rospy
-from std_msgs.msg import Float32, Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray, Bool
 from .path import Autons
 import time
 import rospkg 
@@ -82,6 +82,12 @@ class State(object):
             return True
         else:
             return False
+        
+    def is_balanced(self):
+        return self.ros_node.get_data("/auto/balance/state")
+    
+    def should_balance(self):
+        return self.ros_node.get_data("/auto/balance/should_balance")
 
     # This runs in the child class when created
     def initialize(self):
@@ -119,8 +125,7 @@ class SetIdle(State):
         msg.path_indexes = []
         
         self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
-
-
+        self.ros_node.publish("/auto/balance/set", Bool, False, latching = True)
 
 class StartPath(State):
 
@@ -129,4 +134,8 @@ class StartPath(State):
         msg = PathStart()
         msg.path_indexes = list(indexes)
         
-        self.ros.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
+        self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
+
+class AutoBalance(State):
+    def balance(self):
+        self.ros_node.publish("/auto/balance/set", Bool, True, latching = True)

@@ -105,6 +105,7 @@ class Proxy:
         self.table.putNumberArray("/pathTable/startPose", msg.data)
         
     def _on_path_start(self, msg):
+        print(msg)
         self.table.putNumberArray("/pathTable/startPathIndex", msg.path_indexes)
 
     def _on_new_path(self, msg):
@@ -120,6 +121,9 @@ class Proxy:
         
         self.table.putNumber(f"{path_root}/start_heading", msg.start_heading)
         self.table.putNumber(f"{path_root}/end_heading", msg.end_heading)
+        
+        self.table.putNumber(f"{path_root}/max_acceleration", msg.max_acceleration)
+        self.table.putNumber(f"{path_root}/stop_at_end", msg.stop_at_end)
         
         for i, control_point in enumerate(msg.control_points):
             self.table.putNumber(f"{path_root}/control_point{i}/X", control_point.x)

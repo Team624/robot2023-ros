@@ -6,7 +6,7 @@ server_ip: "10.6.24.2"
 table_name: "SmartDashboard"
 
 # Wanted Output Data ("number", "string", "boolean")
-output_data: []
+output_data: [{name: "/auto/balance/set", type: "boolean", default: false}]
 
 # Wanted Input Data ("number", "string", "boolean")
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 
@@ -15,4 +15,6 @@ input_data: [{name: "/auto/state", type: "boolean", default: false},
              {name: "/pathTable/status/finishedPath", type: "string", default: "false 0"},
              {name: "/pose/th", type: "number", default: 0.0},
              {name: "/pose/x", type: "number", default: 0.0},
-             {name: "/pose/y", type: "number", default: 0.0}]
+             {name: "/pose/y", type: "number", default: 0.0},
+             {name: "/auto/balance/state", type: "boolean", default: false},
+             {name: "/auto/balance/should_balance", type: "boolean", default: true}]

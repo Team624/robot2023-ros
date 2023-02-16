@@ -37,6 +37,9 @@ class AutoPath:
         self.start_heading = json_data["start_heading"]
         self.end_heading = json_data["end_heading"]
         
+        self.max_acceleration = 0
+        self.stop_at_end = True
+        
         self.control_points = []
         
         for point in json_data["control_points"]:
@@ -53,6 +56,9 @@ class AutoPath:
         
         path.start_heading = self.start_heading
         path.end_heading = self.end_heading
+        
+        path.max_acceleration - self.max_acceleration
+        path.stop_at_end = self.stop_at_end
         
         point_msgs = []
         

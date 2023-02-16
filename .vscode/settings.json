@@ -6,5 +6,6 @@
   "python.analysis.extraPaths": [
     "/home/eli/Projects/python/robot2022-ros/devel/lib/python3.10/site-packages",
     "/opt/ros/noetic/lib/python3.10/site-packages"
-  ]
+  ],
+  "cmake.sourceDirectory": "${workspaceFolder}/src/autonomous"
 }

@@ -40,6 +40,8 @@ class ROSNode:
         self.subscribe(self.auto_state_topic, Bool)
         self.subscribe(self.auto_select_topic, Float32)
         self.subscribe(self.finished_path_topic, String)
+        self.subscribe("/auto/balance/status", Bool)
+        self.subscribe("/auto/balance/should_balance", Bool)
 
         # Used for timing events
         self.start_time = time.time()

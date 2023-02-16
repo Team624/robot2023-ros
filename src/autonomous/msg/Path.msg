@@ -8,4 +8,7 @@ float64 start_heading
 float64 end_heading
 float64 time
 
+bool stop_at_end
+float64 max_acceleration
+
 geometry_msgs/Point[] control_points
