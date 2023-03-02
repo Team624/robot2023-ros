@@ -128,7 +128,7 @@ class SetIdle(State):
         msg.path_indexes = []
         
         self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
-        self.ros_node.publish("/auto/balance/set", Bool, False, latching = True)
+        self.ros_node.publish("/auto/balance/set", String, "false false", latching = True)
         self.ros_node.publish("/auto/arm/set", String, "none", latching = True)
         self.ros_node.publish("/auto/vision/align", String, "-1 -1", latching = True)
         self.ros_node.publish("/auto/intake/set", String, "idle")
@@ -143,8 +143,8 @@ class StartPath(State):
         self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
 
 class AutoBalance(State):
-    def balance(self):
-        self.ros_node.publish("/auto/balance/set", Bool, True, latching = True)
+    def balance(self, reverse = False):
+        self.ros_node.publish("/auto/balance/set", String, "true " + str(reverse).lower(), latching = True)
         
 class Arm(State):
     def move_intake(self):

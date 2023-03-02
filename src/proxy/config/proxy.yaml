@@ -6,7 +6,7 @@ server_ip: "10.6.24.2"
 table_name: "SmartDashboard"
 
 # Wanted Output Data ("number", "string", "boolean")
-output_data: [{name: "/auto/balance/set", type: "boolean", default: false},
+output_data: [{name: "/auto/balance/set", type: "string", default: "false false"},
               {name: "/auto/arm/set", type: "string", default: "none"},
               {name: "/auto/vision/set", type: "string", default: "-1 -1"},
               {name: "/auto/num_autons", type: "number", default: 0},
