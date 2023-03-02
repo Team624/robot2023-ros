@@ -6,7 +6,7 @@ import rospy
 from std_msgs.msg import Float32, Bool, String, Float32MultiArray
 import threading
 from geometry_msgs.msg import Twist
-from autonomous.msg import Path, PathStart
+from autonomous.msg import Path, PathStart, Auton
 
 # Creates proxy node
 rospy.init_node('proxy')
@@ -71,6 +71,9 @@ class Proxy:
         
         # For starting paths
         rospy.Subscriber("/pathTable/startPathIndex", PathStart, self._on_path_start)
+        
+        # For publishing auton names
+        rospy.Subscriber("/auto/autons", Auton, self._on_new_auton)
 
     def subscribe(self, topic_name, data_type):
         """ This sets up the ros subscribers for incoming data """
@@ -123,11 +126,14 @@ class Proxy:
         self.table.putNumber(f"{path_root}/end_heading", msg.end_heading)
         
         self.table.putNumber(f"{path_root}/max_acceleration", msg.max_acceleration)
-        self.table.putNumber(f"{path_root}/stop_at_end", msg.stop_at_end)
+        self.table.putBoolean(f"{path_root}/stop_at_end", msg.stop_at_end)
         
         for i, control_point in enumerate(msg.control_points):
             self.table.putNumber(f"{path_root}/control_point{i}/X", control_point.x)
             self.table.putNumber(f"{path_root}/control_point{i}/Y", control_point.y)
+            
+    def _on_new_auton(self, msg):        
+        self.table.putString(f"/auto/autons/auton{msg.id}", msg.name)
 
     def main(self):
         """ This is the main loop """

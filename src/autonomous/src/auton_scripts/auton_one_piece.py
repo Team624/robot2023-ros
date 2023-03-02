@@ -1,0 +1,115 @@
+import rospy
+from std_msgs.msg import Float32, String, Bool
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Intake
+
+# The id of the auton, used for picking auton
+auton_id = 3
+auton_title = "1 Piece"
+
+# Start of our states
+class Idle(SetIdle):
+    """
+    The state which waits for autonomous to start
+    """
+
+    def initialize(self):
+        self.log_state()
+
+    def execute_action(self):
+        self.setRobotPose()
+        self.setIdle()
+
+    def tick(self):
+        return MoveArm(self.ros_node)
+  
+class MoveArm(Arm):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.move_cube_high()
+    
+    def tick(self):
+        if (self.get_arm_state() == "high"):
+            return ReverseIntake(self.ros_node)
+        return self
+    
+class ReverseIntake(Intake):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.reverse_cube()
+    
+    def tick(self):
+        if (self.check_timer(0.5)):
+            self.idle_intake()
+            return FunnelArm(self.ros_node)
+        return self
+    
+class FunnelArm(Arm):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.retract()
+        
+    def tick(self):
+        if self.get_arm_state() == "retract":
+            if self.should_balance():
+                return Balance(self.ros_node)
+            return Final(self.ros_node)
+        return self
+
+class Balance(AutoBalance):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.balance()
+        
+    def tick(self):
+        if self.is_balanced():
+            return Final(self.ros_node)
+        return self
+
+class Final(State):
+    """
+    The state which indicates that there are no limitations on device
+    capabilities.
+    """
+
+    def initialize(self):
+        self.log_state()
+
+    def execute_action(self):
+        rospy.loginfo("END OF AUTON")
+
+    def tick(self):
+        return self
+
+class Shutdown(SetIdle):
+    """
+    The state which indicates that there are no limitations on device
+    capabilities.
+    """
+
+    def initialize(self):
+        pass
+
+    def execute_action(self):
+        self.setIdle()
+
+    def tick(self):
+        return self
+
+def start(ros_node):
+    # Pick which topics to subscribe to
+    ros_node.subscribe("/pathTable/status/path", Float32)
+    ros_node.subscribe("/pathTable/status/finishedPath", String)
+    ros_node.subscribe("/auto/balance/state", Bool)
+    ros_node.subscribe("/auto/balance/should_balance", Bool)
+    ros_node.subscribe("/auto/vision/set", String)
+
+    # Return the wanted Start and Shutdown state
+    return Idle, Shutdown

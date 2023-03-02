@@ -1,6 +1,6 @@
 import json
 import rospy
-from std_msgs.msg import Float32, Float32MultiArray, Bool
+from std_msgs.msg import Float32, Float32MultiArray, Bool, String
 from .path import Autons
 import time
 import rospkg 
@@ -88,6 +88,9 @@ class State(object):
     
     def should_balance(self):
         return self.ros_node.get_data("/auto/balance/should_balance")
+    
+    def get_arm_state(self):
+        return self.ros_node.get_data("/auto/arm/state")
 
     # This runs in the child class when created
     def initialize(self):
@@ -126,6 +129,9 @@ class SetIdle(State):
         
         self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
         self.ros_node.publish("/auto/balance/set", Bool, False, latching = True)
+        self.ros_node.publish("/auto/arm/set", String, "none", latching = True)
+        self.ros_node.publish("/auto/vision/align", String, "-1 -1", latching = True)
+        self.ros_node.publish("/auto/intake/set", String, "idle")
 
 class StartPath(State):
 
@@ -139,3 +145,42 @@ class StartPath(State):
 class AutoBalance(State):
     def balance(self):
         self.ros_node.publish("/auto/balance/set", Bool, True, latching = True)
+        
+class Arm(State):
+    def move_intake(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_intake", latching = True)
+    def move_cone_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_high", latching = True)
+    def move_cone_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_mid", latching = True)
+    def move_cone_low(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_low", latching = True)
+    def move_cube_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_high", latching = True)
+    def move_cube_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_mid", latching = True)
+    def move_cube_low(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_low", latching = True)
+    
+    def place(self):
+        self.ros_node.publish("/auto/arm/set", String, "place", latching = True)
+        
+    def retract(self):
+        self.ros_node.publish("/auto/arm/set", String, "retract", latching = True)
+
+class Vision(State):
+    def start_align_node(self, grid, column):
+        self.ros_node.publish("/auto/vision/set", String, f"{grid} {column}", latching = True)
+    
+    def is_aligned(self, grid, column):
+        return self.ros_node.get_data("/auto/vision/status") == f"{grid} {column}"
+
+class Intake(State):
+    def run_intake(self):
+        self.ros_node.publish("/auto/intake/set", String, "intake", latching=True)
+    def idle_intake(self):
+        self.ros_node.publish("/auto/intake/set", String, "idle", latching=True)
+    def reverse_cone(self):
+        self.ros_node.publish("/auto/intake/set", String, "cone", latching=True)
+    def reverse_cube(self):
+        self.ros_node.publish("/auto/intake/set", String, "cube", latching=True)

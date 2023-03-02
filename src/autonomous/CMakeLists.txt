@@ -52,6 +52,7 @@ add_message_files(
   FILES
   "Path.msg"
   "PathStart.msg"
+  "Auton.msg"
 )
 
 ## Generate services in the 'srv' folder

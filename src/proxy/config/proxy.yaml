@@ -6,7 +6,11 @@ server_ip: "10.6.24.2"
 table_name: "SmartDashboard"
 
 # Wanted Output Data ("number", "string", "boolean")
-output_data: [{name: "/auto/balance/set", type: "boolean", default: false}]
+output_data: [{name: "/auto/balance/set", type: "boolean", default: false},
+              {name: "/auto/arm/set", type: "string", default: "none"},
+              {name: "/auto/vision/set", type: "string", default: "-1 -1"},
+              {name: "/auto/num_autons", type: "number", default: 0},
+              {name: "/auto/intake/set", type: "string", default: "aaa"}]
 
 # Wanted Input Data ("number", "string", "boolean")
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 
@@ -17,4 +21,7 @@ input_data: [{name: "/auto/state", type: "boolean", default: false},
              {name: "/pose/x", type: "number", default: 0.0},
              {name: "/pose/y", type: "number", default: 0.0},
              {name: "/auto/balance/state", type: "boolean", default: false},
-             {name: "/auto/balance/should_balance", type: "boolean", default: true}]
+             {name: "/auto/balance/should_balance", type: "boolean", default: true},
+             {name: "/auto/vision/state", type: "string", default: "-1 -1"},
+             {name: "/auto/arm/state", type: "string", default: "retract"},
+             {name: "/auto/is_blue", type: "boolean", default: true}]
