@@ -1,19 +1,15 @@
 #! /usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Float32, Float64, Bool, Float32MultiArray
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose
-from nav_msgs.msg import Odometry, Path
+from std_msgs.msg import Float32, Float64, Bool, Float32MultiArray, String
 import time
-from auton_scripts.auton_modules.path import AutoPath, AutoGoal
 import os
 from auton_scripts.auton_modules.state_machine import StateMachine
 import rospkg
 import importlib
 import auton_scripts.auton_modules.state as state
-from autonomous.msg import GoalPath, Goal
-
+from autonomous.msg import Path, Auton
+import math
 
 # Imports all autons
 rospack = rospkg.RosPack()
@@ -31,6 +27,7 @@ class ROSNode:
         self.rate = float(rospy.get_param('rate', 50))
         self.auto_state_topic = rospy.get_param('auto_state_topic', "/auto/state")
         self.auto_select_topic = rospy.get_param('auto_select_topic', "/auto/select")
+        self.finished_path_topic = rospy.get_param('finished_path_topic', "/pathTable/status/finishedPath")
 
         self._data = {}
         self._publishers = {}
@@ -42,6 +39,12 @@ class ROSNode:
         # Needed for determining when to start auton
         self.subscribe(self.auto_state_topic, Bool)
         self.subscribe(self.auto_select_topic, Float32)
+        self.subscribe(self.finished_path_topic, String)
+        self.subscribe("/auto/balance/status", String)
+        self.subscribe("/auto/balance/should_balance", Bool)
+        self.subscribe("/auto/arm/state", String)
+        self.subscribe("/auto/vision/set", String)
+        self.subscribe("/auto/is_blue", Bool)
 
         # Used for timing events
         self.start_time = time.time()
@@ -96,9 +99,18 @@ class ROSNode:
     def main(self):
         """ This is the main loop for autonomous """
         rospy.loginfo("{0} started".format(rospy.get_name()))
+        
+        self.publish("/auto/num_autons", Float32, len(autons), latching=True)
 
         rate = rospy.Rate(self.rate)
         while not rospy.is_shutdown():   
+            for auton in autons:
+                msg = Auton()
+                msg.id = auton.auton_id
+                msg.name = auton.auton_title
+            
+                self.publish("/auto/autons", Auton, msg, latching=True)
+            
             # State machine is running and auton disabled
             if self.state_machine is not None and not self.get_data(self.auto_state_topic):
                 rospy.logwarn("State Machine Reset")
@@ -135,14 +147,20 @@ class ROSNode:
                                 # This is where I put the publishing of the path
                                 # Loop through all the paths and publish them in seperate topics
                                 for path in auto.paths:
-                                    path_data = path.get_path()
+                                    path_data = path.get_path(self.get_data("/auto/is_blue"))
                                     
                                     path_data.path_index = path.id
                                     path_data.number_of_paths = len(auto.paths)
-                                    self.publish("/auto/paths", GoalPath, path_data, latching = True)
+                                    path_data.name = auto.title
+                                    self.publish("/auto/paths", Path, path_data, latching = True)
                                     #rospy.loginfo("Published Path, with the name '%s'", path.name)
 
                                 # Todo add this as a seperate subscriber to the proxy
+                                start_pose = auto.start_pose
+                                if (not self.get_data("/auto/is_blue")):
+                                    # Flip starting posisition on red alliance
+                                    start_pose[0] = 16.54175 - start_pose[0]
+                                    start_pose[2] = math.pi - start_pose[2]
                                 msg.data = auto.start_pose
                                 self.publish("/auto/robot_set_pose", Float32MultiArray, msg, latching = True)
                                 #rospy.loginfo_throttle(10, "Reset Robot Pose")

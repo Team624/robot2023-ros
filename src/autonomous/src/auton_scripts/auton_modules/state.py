@@ -1,13 +1,11 @@
-from datetime import datetime
 import json
 import rospy
-from std_msgs.msg import Float32, Float64, Bool, String, Float32MultiArray
-from geometry_msgs.msg import Pose, PoseWithCovarianceStamped
-# from diff_drive.msg import Goal, GoalPath, Constants, Linear, Angular
-from .path import AutoGoal, AutoPath, Autons
+from std_msgs.msg import Float32, Float32MultiArray, Bool, String
+from .path import Autons
 import time
 import rospkg 
 import math
+from autonomous.msg import PathStart
 
 global data
 data = []
@@ -76,9 +74,6 @@ class State(object):
 
     def get_point(self):
         return self.ros_node.get_data("/pathTable/status/point")
-    
-    def get_ball_count(self):
-        return self.ros_node.get_data("/auto/numBall")
 
     def finished_path(self, path_num):
         string_array = self.ros_node.get_data("/pathTable/status/finishedPath").split()
@@ -87,6 +82,15 @@ class State(object):
             return True
         else:
             return False
+        
+    def is_balanced(self):
+        return self.ros_node.get_data("/auto/balance/state")
+    
+    def should_balance(self):
+        return self.ros_node.get_data("/auto/balance/should_balance")
+    
+    def get_arm_state(self):
+        return self.ros_node.get_data("/auto/arm/state")
 
     # This runs in the child class when created
     def initialize(self):
@@ -119,188 +123,64 @@ class SetIdle(State):
                 rospy.loginfo("Reset Robot Pose")
 
     def setIdle(self):
-        # Retract intake
-        intake_state = String()
-        intake_state.data = "retract"
-        self.ros_node.publish("/auto/intake/state", String, intake_state, latching = True)
-        rospy.loginfo("Retracted Intake")
-
-        # Shooter idle
-        shooter_state = String()
-        shooter_state.data = "idle"
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Idle")
-
-        # Flywheel idle
-        flywheel_state = String()
-        flywheel_state.data = "idle"
-        self.ros_node.publish("/auto/flywheel/state", String, flywheel_state, latching = True)
-        rospy.loginfo("Flywheel Idle")
-
-        # Hood idle
-        hood_state = String()
-        hood_state.data = "idle"
-        self.ros_node.publish("/auto/hood/state", String, hood_state, latching = True)
-        rospy.loginfo("Hood Idle")
-
         # Path Idle
-        self.ros_node.publish("/pathTable/startPathIndex", Float32, -1, latching = True)
-
-
+        msg = PathStart()
+        msg.path_indexes = []
+        
+        self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
+        self.ros_node.publish("/auto/balance/set", String, "false false", latching = True)
+        self.ros_node.publish("/auto/arm/set", String, "none", latching = True)
+        self.ros_node.publish("/auto/vision/align", String, "-1 -1", latching = True)
+        self.ros_node.publish("/auto/intake/set", String, "idle")
 
 class StartPath(State):
 
     # Actions
-    def start_path(self, index):
-        """ This gets the path data from the json file and publishes to diff_drive """
-        # Checks for updated data
-        self.ros_node.publish("/pathTable/startPathIndex", Float32, index, latching = True)
+    def start_paths(self, *indexes):
+        msg = PathStart()
+        msg.path_indexes = list(indexes)
         
+        self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
 
-# This is ROBOT SPECIFIC
+class AutoBalance(State):
+    def balance(self, reverse = False):
+        self.ros_node.publish("/auto/balance/set", String, "true " + str(reverse).lower(), latching = True)
+        
+class Arm(State):
+    def move_intake(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_intake", latching = True)
+    def move_cone_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_high", latching = True)
+    def move_cone_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_mid", latching = True)
+    def move_cone_low(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cone_low", latching = True)
+    def move_cube_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_high", latching = True)
+    def move_cube_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_mid", latching = True)
+    def move_cube_low(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_cube_low", latching = True)
+    
+    def place(self):
+        self.ros_node.publish("/auto/arm/set", String, "place", latching = True)
+        
+    def retract(self):
+        self.ros_node.publish("/auto/arm/set", String, "retract", latching = True)
+
+class Vision(State):
+    def start_align_node(self, grid, column):
+        self.ros_node.publish("/auto/vision/set", String, f"{grid} {column}", latching = True)
+    
+    def is_aligned(self, grid, column):
+        return self.ros_node.get_data("/auto/vision/status") == f"{grid} {column}"
+
 class Intake(State):
-
-    # Actions
-    def deploy_intake(self):
-        """ This publishes a msg to deploy the intake """
-        intake_state = String()
-        intake_state.data = "deploy"
-
-        self.ros_node.publish("/auto/intake/state", String, intake_state, latching = True)
-        rospy.loginfo("Deployed Intake")
-
-    def retract_intake(self):
-        """ This publishes a msg to retract the intake """
-        intake_state = String()
-        intake_state.data = "retract"
-
-        self.ros_node.publish("/auto/intake/state", String, intake_state, latching = True)
-        rospy.loginfo("Retracted Intake")
-
-class Color(State):
-
-    # Actions
-    def enable_color(self):
-        """ This publishes a msg to deploy the intake """
-        color_state = String()
-        color_state.data = "enable"
-
-        self.ros_node.publish("/auto/color/state", String, color_state, latching = True)
-        rospy.loginfo("Enabled Color Sensor")
-
-    def disable_color(self):
-        """ This publishes a msg to retract the intake """
-        color_state = String()
-        color_state.data = "disable"
-
-        self.ros_node.publish("/auto/color/state", String, color_state, latching = True)
-        rospy.loginfo("Disabled Color Sensor")
-
-class Shooter(State):
-
-    # This puts the shooter in idle mode and allows other sub systems to do specific functions
-    def idle(self):
-        """ This puts the shooter in idle mode """
-        shooter_state = String()
-        shooter_state.data = "idle"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Idle")
-    
-    # Overrides the other states because it needs to control all three subsystems 
-    def hide_shoot(self):
-        """ This starts the turret tracking, adjusting rpm, and hood angle """
-        shooter_state = String()
-        shooter_state.data = "hide_shoot"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Hide Shoot")
-    
-    def hide_poop(self):
-        """ This starts the turret tracking, adjusting rpm, and hood angle """
-        shooter_state = String()
-        shooter_state.data = "hide_poop"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Hide Poop")
-
-    def lob_prime(self):
-        """ This starts the turret tracking, adjusting rpm, and hood angle """
-        shooter_state = String()
-        shooter_state.data = "lob_prime"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Lob Prime")
-
-    def lob_shoot(self):
-        """ This starts the turret tracking, adjusting rpm, and hood angle """
-        shooter_state = String()
-        shooter_state.data = "lob_shoot"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Lob Shoot")
-
-    def start_prime(self):
-        """ This starts the turret tracking, adjusting rpm, and hood angle """
-        shooter_state = String()
-        shooter_state.data = "prime"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Prime")
-
-    def start_shoot(self):
-        """ This makes the turret begin to shoot """
-        shooter_state = String()
-        shooter_state.data = "shoot"
-
-        self.ros_node.publish("/auto/shooter/state", String, shooter_state, latching = True)
-        rospy.loginfo("Shooter Shooting")
-
-class Flywheel(Shooter):
-
-    # Conditions
-    def reached_rpm(self, rpm):
-        """ Checks if the fly wheel has reached the wanted rpm """
-        if self.ros_node.get_data("/auto/flywheel/current/rpm") == rpm:
-            return True
-        return False
-
-    # Actions (Only works if Shooter is in idle)
-    def idle_flywheel(self):
-        """ This puts the shooter into idle mode """
-        flywheel_state = String()
-        flywheel_state.data = "idle"
-
-        self.ros_node.publish("/auto/flywheel/state", String, flywheel_state, latching = True)
-        rospy.loginfo("Flywheel Idle")
-
-    def start_spin_up(self, rpm):
-        """ This starts the robot's spin up to a specific rpm """
-        flywheel_state = String()
-        flywheel_state.data = "spin_up"
-
-        flywheel_rpm = Float32()
-        flywheel_rpm.data = rpm
-
-        self.ros_node.publish("/auto/flywheel/state", String, flywheel_state, latching = True)
-        self.ros_node.publish("/auto/flywheel/wanted/rpm", Float32, flywheel_rpm, latching = True)
-        rospy.loginfo("Flywheel Spinup")
-
-class Hood(Shooter):
-
-    # Actions (Only works if Shooter is in idle)
-    def idle_hood(self):
-        """ This puts the hood into idle mode """
-        hood_state = String()
-        hood_state.data = "idle"
-
-        self.ros_node.publish("/auto/hood/state", String, hood_state, latching = True)
-        rospy.loginfo("Hood Idle")
-
-    def actuate_hood(self, angle):
-        """ This adjusts the hood to the given angle """
-        hood_state = String()
-        hood_state.data = "actuate"
-
-        self.ros_node.publish("/auto/hood/state", String, hood_state, latching = True)
-        rospy.loginfo("Hood Actuate")
+    def run_intake(self):
+        self.ros_node.publish("/auto/intake/set", String, "intake", latching=True)
+    def idle_intake(self):
+        self.ros_node.publish("/auto/intake/set", String, "idle", latching=True)
+    def reverse_cone(self):
+        self.ros_node.publish("/auto/intake/set", String, "cone", latching=True)
+    def reverse_cube(self):
+        self.ros_node.publish("/auto/intake/set", String, "cube", latching=True)

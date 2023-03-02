@@ -1,10 +1,10 @@
 import rospy
-from std_msgs.msg import Float32, String
-from .auton_modules.state import SetIdle, State, StartPath
+from std_msgs.msg import Float32, String, Bool
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Intake
 
 # The id of the auton, used for picking auton
-auton_id = 1
-auton_title = "P Path"
+auton_id = 3
+auton_title = "1 Piece"
 
 # Start of our states
 class Idle(SetIdle):
@@ -20,39 +20,56 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return StartFirstPath(self.ros_node)
-
-class StartFirstPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
+        return MoveArm(self.ros_node)
+  
+class MoveArm(Arm):
     def initialize(self):
         self.log_state()
-        self.start_path(0)
-
+        
     def execute_action(self):
-        pass
-
+        self.move_cube_high()
+    
     def tick(self):
-        if self.finished_path(0):
-            return StartSecondPath(self.ros_node)
+        if (self.get_arm_state() == "high"):
+            return ReverseIntake(self.ros_node)
         return self
-
-class StartSecondPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
+    
+class ReverseIntake(Intake):
     def initialize(self):
         self.log_state()
-        self.start_path(1)
-
+        
     def execute_action(self):
-        pass
+        self.reverse_cube()
+    
+    def tick(self):
+        if (self.check_timer(0.5)):
+            self.idle_intake()
+            return FunnelArm(self.ros_node)
+        return self
+    
+class FunnelArm(Arm):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.retract()
         
     def tick(self):
-        if self.finished_path(1):
+        if self.get_arm_state() == "retract":
+            if self.should_balance():
+                return Balance(self.ros_node)
+            return Final(self.ros_node)
+        return self
+
+class Balance(AutoBalance):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.balance()
+        
+    def tick(self):
+        if self.is_balanced():
             return Final(self.ros_node)
         return self
 
@@ -90,6 +107,9 @@ def start(ros_node):
     # Pick which topics to subscribe to
     ros_node.subscribe("/pathTable/status/path", Float32)
     ros_node.subscribe("/pathTable/status/finishedPath", String)
+    ros_node.subscribe("/auto/balance/state", Bool)
+    ros_node.subscribe("/auto/balance/should_balance", Bool)
+    ros_node.subscribe("/auto/vision/set", String)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown
