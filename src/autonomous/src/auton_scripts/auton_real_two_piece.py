@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Intake
 
 # The id of the auton, used for picking auton
-auton_id = 4
-auton_title = "2 Piece Left (Blue)"
+auton_id = 7
+auton_title = "Real Two Piece Blue"
 
 # Start of our states
 class Idle(SetIdle):
@@ -20,8 +20,50 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return StartFirstPath(self.ros_node)
+        return MoveArmCone(self.ros_node)
+    
+class MoveArmCone(Arm):
+    def initialize(self):
+        self.log_state()
+    
+    def execute_action(self):
+        self.move_cone_high()
+    
+    def tick(self):
+        if self.get_arm_state() == "high":
+            return TelescopeZero(self.ros_node)
+        return self
 
+
+class TelescopeZero(Arm):
+    def initialize(self):
+        self.log_state()
+    
+    def execute_action(self):
+        self.retract()
+    
+    def tick(self):
+        if self.get_arm_state() == "retract": 
+            return MoveArmIntake(self.ros_node)
+        return self
+        
+
+class MoveArmIntake(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.move_intake()
+    def tick(self):
+        return RunIntake(self.ros_node)
+    
+class RunIntake(Intake):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.run_intake()
+    def tick(self):
+        return StartFirstPath(self.ros_node)
+    
 class StartFirstPath(StartPath):
     """
     The state which publishes the first path to follow
@@ -29,86 +71,87 @@ class StartFirstPath(StartPath):
 
     def initialize(self):
         self.log_state()
-        self.start_path(0)
 
     def execute_action(self):
-        pass
+        self.start_paths(0)
 
     def tick(self):
         if self.finished_path(0):
-            return MoveFirstCone(self.ros_node)
+            return IdleIntake(self.ros_node)
         return self
 
-class MoveFirstCone(Arm):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.move_cone_high()
-        
-    def tick(self):
-        if self.get_arm_state() == "cone_high":
-            return MoveIntakeCube(self.ros_node)
-        return self
-        
-
-
-class MoveIntakeCube(StartPath, Arm):
+class IdleIntake(Intake):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.start_paths(0)
-        self.move_intake()
+        self.idle_intake()
     def tick(self):
-        if self.finished_path(0) and self.get_arm_state() == "intake":
-            return IntakeCone(self.ros_node)
+        return TelescopeZero1(self.ros_node)
+
+class TelescopeZero1(Arm):
+    def initialize(self):
+        self.log_state()
+    
+    def execute_action(self):
+        self.retract()
+    
+    def tick(self):
+        if self.get_arm_state() == "retract" and self.check_timer(1):
+            return MoveArmCube(self.ros_node)
+        return self
+
+class MoveArmCube(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.move_cube_high()
+    def tick(self):
+        return StartSecondPath(self.ros_node)
+    
+class StartSecondPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(1)
+    def tick(self):
+        if self.finished_path(1) and self.get_arm_state() == "high":
+            return ReverseCube(self.ros_node)
         return self
         
-class IntakeCone(Intake):
+class ReverseCube(Intake):
     def initialize(self):
         self.log_state()
     def execute_action(self):
         self.reverse_cube()
     def tick(self):
         if self.check_timer(0.5):
-            return MovePlaceCube(self.ros_node)
+            return FunnelArm(self.ros_node)
         return self
-    
-class MovePlaceCube(StartPath, Arm):
+            
+class FunnelArm(Arm):
     def initialize(self):
         self.log_state()
+        
     def execute_action(self):
-        self.move_cube_high()
-        self.start_paths(1)
+        self.retract()
+        
     def tick(self):
-        if (self.finished_path(1) and self.get_arm_state() == "cube_high"):
-            return PlaceCube(self.ros_node)
-        return PlaceCube(self.ros_node)
-    
-class PlaceCube(Arm):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.place()
-    def tick(self):
-        if (self.check_timer(0.3)):
-            if (self.should_balance()):
-                return StartBalancePath(self.ros_node)
+        if self.get_arm_state() == "retract":
+            if self.should_balance():
+                return StartThirdPath(self.ros_node)
             return Final(self.ros_node)
-        return self
-      
-class StartBalancePath(StartPath):
+        return self    
+
+class StartThirdPath(StartPath):
     def initialize(self):
         self.log_state()
-    
     def execute_action(self):
         self.start_paths(2)
-    
     def tick(self):
         if self.finished_path(2):
             return Balance(self.ros_node)
         return self
-    
+        
 class Balance(AutoBalance):
     def initialize(self):
         self.log_state()

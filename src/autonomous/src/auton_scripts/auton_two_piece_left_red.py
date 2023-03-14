@@ -31,18 +31,9 @@ class MoveArmCone(Arm):
     
     def tick(self):
         if self.get_arm_state() == "high":
-            return ReverseCone(self.ros_node)
-        return self
-
-class ReverseCone(Intake):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.reverse_cone()
-    def tick(self):
-        if self.check_timer(0.5):
             return MoveArmIntake(self.ros_node)
         return self
+
     
 class MoveArmIntake(Arm):
     def initialize(self):
