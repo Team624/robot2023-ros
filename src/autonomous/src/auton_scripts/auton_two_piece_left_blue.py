@@ -4,7 +4,7 @@ from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, In
 
 # The id of the auton, used for picking auton
 auton_id = 4
-auton_title = "2 Piece Left (Red)"
+auton_title = "2 Piece Left (Blue)"
 
 # Start of our states
 class Idle(SetIdle):
