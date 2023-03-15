@@ -31,8 +31,19 @@ class MoveArmCone(Arm):
     
     def tick(self):
         if self.get_arm_state() == "high":
+            return ReverseIntake(self.ros_node)
+        return self
+
+class ReverseIntake(Intake):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.reverse_cone()
+    def tick(self):
+        if self.check_timer(3):
             return TelescopeZero(self.ros_node)
         return self
+    
 
 
 class TelescopeZero(Arm):
@@ -122,9 +133,9 @@ class ReverseCube(Intake):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.reverse_cube()
+        self.reverse_cone()
     def tick(self):
-        if self.check_timer(0.5):
+        if self.check_timer(1.5):
             return FunnelArm(self.ros_node)
         return self
             
