@@ -54,8 +54,8 @@ class AutoPath:
         path.path_index = self.id
         path.time = self.time
         
-        path.start_heading = self.start_heading if is_blue_alliance else math.pi - self.start_heading
-        path.end_heading = self.end_heading if is_blue_alliance else math.pi - self.end_heading
+        path.start_heading = self.start_heading if is_blue_alliance else -self.start_heading % (2 * math.pi)
+        path.end_heading = self.end_heading if is_blue_alliance else -self.end_heading % (2 * math.pi)
         
         path.max_acceleration = self.max_acceleration
         path.stop_at_end = self.stop_at_end
@@ -71,3 +71,6 @@ class AutoPath:
         path.control_points = point_msgs
         
         return path
+    
+    def reverse_angle(angle):
+        return -angle % (2 * math.pi)

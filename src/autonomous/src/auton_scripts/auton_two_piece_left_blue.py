@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float32, String, Bool
-from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Intake
+from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
 auton_id = 4
@@ -20,24 +20,7 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return StartFirstPath(self.ros_node)
-
-class StartFirstPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-        self.start_path(0)
-
-    def execute_action(self):
-        pass
-
-    def tick(self):
-        if self.finished_path(0):
-            return MoveFirstCone(self.ros_node)
-        return self
+        return MoveFirstCone(self.ros_node)
 
 class MoveFirstCone(Arm):
     def initialize(self):
@@ -47,51 +30,95 @@ class MoveFirstCone(Arm):
         self.move_cone_high()
         
     def tick(self):
-        if self.get_arm_state() == "cone_high":
-            return MoveIntakeCube(self.ros_node)
+        if self.get_arm_state() == "high":
+            return RetractArm(self.ros_node)
         return self
-        
-
-
-class MoveIntakeCube(StartPath, Arm):
+    
+class RetractArm(Arm):
     def initialize(self):
         self.log_state()
+        
+    def execute_action(self):
+        self.retract()
+        
+    def tick(self):
+        if self.get_arm_state() == "retract":
+            return InsideBot(self.ros_node)
+        return self
+    
+class InsideBot(Arm):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.inside_bot()
+        
+    def tick(self):
+        if self.get_arm_state() == "inside":
+            return StartFirstPath(self.ros_node)
+        return self
+    
+class StartFirstPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
+
+    def initialize(self):
+        self.log_state()
+
     def execute_action(self):
         self.start_paths(0)
-        self.move_intake()
+
     def tick(self):
-        if self.finished_path(0) and self.get_arm_state() == "intake":
-            return IntakeCone(self.ros_node)
-        return self
-        
-class IntakeCone(Intake):
+        return MoveIntakeCube(self.ros_node)
+    
+class MoveIntakeCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.reverse_cube()
+        self.intake()
     def tick(self):
-        if self.check_timer(0.5):
-            return MovePlaceCube(self.ros_node)
+        if self.finished_path(0):
+            return PrimeCube(self.ros_node)
         return self
     
-class MovePlaceCube(StartPath, Arm):
+class PrimeCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_cube_high()
+        self.prime_high()
+    def tick(self):
+        return StartSecondPath(self.ros_node)
+    
+class StartSecondPath(StartPath):
+    def initialize(self):
+        self.log_state()
+
+    def execute_action(self):
         self.start_paths(1)
+
     def tick(self):
-        if (self.finished_path(1) and self.get_arm_state() == "cube_high"):
-            return PlaceCube(self.ros_node)
-        return PlaceCube(self.ros_node)
+        if self.finished_path(1) and self.get_shooter_state() == "prime_high":
+            return ShootCube(self.ros_node)
+        return self
     
-class PlaceCube(Arm):
+class ShootCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.place()
+        self.shoot_high()
     def tick(self):
-        if (self.check_timer(0.3)):
+        if (self.get_shooter_state() == "shoot_high"):
+            return IdleShooter(self.ros_node)
+        return self
+    
+class IdleShooter(Shooter):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.idle()
+    def tick(self):
+        if (self.get_shooter_state() == "idle"):
             if (self.should_balance()):
                 return StartBalancePath(self.ros_node)
             return Final(self.ros_node)

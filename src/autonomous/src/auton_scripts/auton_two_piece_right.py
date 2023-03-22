@@ -47,7 +47,8 @@ class MoveFirstCone(Arm):
         self.move_cone_high()
         
     def tick(self):
-        if self.get_arm_state() == "cone_high":
+        print(self.get_arm_state())
+        if self.get_arm_state() == "high":
             return PlaceFirstCone(self.ros_node)
         return self
         

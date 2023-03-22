@@ -91,6 +91,9 @@ class State(object):
     
     def get_arm_state(self):
         return self.ros_node.get_data("/auto/arm/state")
+    
+    def get_shooter_state(self):
+        return self.ros_node.get_data("/auto/shooter/state")
 
     # This runs in the child class when created
     def initialize(self):
@@ -155,18 +158,15 @@ class Arm(State):
         self.ros_node.publish("/auto/arm/set", String, "move_cone_mid", latching = True)
     def move_cone_low(self):
         self.ros_node.publish("/auto/arm/set", String, "move_cone_low", latching = True)
-    def move_cube_high(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cube_high", latching = True)
-    def move_cube_mid(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cube_mid", latching = True)
-    def move_cube_low(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cube_low", latching = True)
     
     def place(self):
         self.ros_node.publish("/auto/arm/set", String, "place", latching = True)
         
     def retract(self):
         self.ros_node.publish("/auto/arm/set", String, "retract", latching = True)
+        
+    def inside_bot(self):
+        self.ros_node.publish("/auto/arm/set", String, "move_inside_bot", latching = True)
 
 class Vision(State):
     def start_align_node(self, grid, column):
@@ -182,5 +182,22 @@ class Intake(State):
         self.ros_node.publish("/auto/intake/set", String, "idle", latching=True)
     def reverse_cone(self):
         self.ros_node.publish("/auto/intake/set", String, "cone", latching=True)
-    def reverse_cube(self):
-        self.ros_node.publish("/auto/intake/set", String, "cube", latching=True)
+        
+class Shooter(State):
+    def prime_high(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_high", latching=True)
+    def prime_mid(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_mid", latching=True)
+    def prime_low(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_low", latching=True)
+    def intake(self):
+        self.ros_node.publish("/auto/shooter/set", String, "deploy_intake", latching=True)
+    def shoot_high(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_high", latching=True)
+    def shoot_mid(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_mid", latching=True)
+    def shoot_low(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_low", latching=True)
+    def idle(self):
+        self.ros_node.publish("/auto/shooter/set", String, "idle", latching=True)
+    

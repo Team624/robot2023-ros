@@ -43,8 +43,8 @@ class ROSNode:
         self.subscribe("/auto/balance/status", String)
         self.subscribe("/auto/balance/should_balance", Bool)
         self.subscribe("/auto/arm/state", String)
-        self.subscribe("/auto/vision/set", String)
         self.subscribe("/auto/is_blue", Bool)
+        self.subscribe("/auto/shooter/state", String)
 
         # Used for timing events
         self.start_time = time.time()
@@ -160,7 +160,7 @@ class ROSNode:
                                 if (not self.get_data("/auto/is_blue")):
                                     # Flip starting posisition on red alliance
                                     start_pose[0] = 16.54175 - start_pose[0]
-                                    start_pose[2] = math.pi - start_pose[2]
+                                    start_pose[2] = -start_pose[2] % (2 * math.pi)
                                 msg.data = auto.start_pose
                                 self.publish("/auto/robot_set_pose", Float32MultiArray, msg, latching = True)
                                 #rospy.loginfo_throttle(10, "Reset Robot Pose")
