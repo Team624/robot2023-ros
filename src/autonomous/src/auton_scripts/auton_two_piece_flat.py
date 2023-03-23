@@ -3,9 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 6
-auton_title = "2 Piece Flat Charge Behind"
-
+auton_id = 2
+auton_title = "2 Piece Flat"
 # Start of our states
 class Idle(SetIdle):
     """

@@ -63,8 +63,9 @@ class AutoPath:
         point_msgs = []
         
         for point in self.control_points:
-            x = point[0] if is_blue_alliance else 16.54175 - point[0]
-            point_msg = Point(x, point[1], 0)
+            # x = point[0] if is_blue_alliance else 16.54175 - point[0]
+            y = point[1] if is_blue_alliance else -8.0137 - point[1]
+            point_msg = Point(point[0], y, 0)
             
             point_msgs.append(point_msg)
             

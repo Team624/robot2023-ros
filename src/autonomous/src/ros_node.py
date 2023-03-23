@@ -160,7 +160,8 @@ class ROSNode:
                                 start_pose = auto.start_pose
                                 if (not self.get_data("/auto/is_blue")):
                                     # Flip starting posisition on red alliance
-                                    start_pose[0] = 16.54175 - start_pose[0]
+                                    # start_pose[0] = 16.54175 - start_pose[0]
+                                    start_pose[1] = -8.0137 - start_pose[1]
                                     start_pose[2] = -start_pose[2] % (2 * math.pi)
                                 msg.data = auto.start_pose
                                 self.publish("/auto/robot_set_pose", Float32MultiArray, msg, latching = True)

@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 2
-auton_title = "2 Piece Flat"
+auton_id = 6
+auton_title = "2 Piece Flat Charge Behind"
 
 # Start of our states
 class Idle(SetIdle):
@@ -89,7 +89,7 @@ class PrimeCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.prime_high()
+        self.prime_low()
     def tick(self):
         return StartSecondPath(self.ros_node)
     
@@ -101,23 +101,10 @@ class StartSecondPath(StartPath):
         self.start_paths(1)
 
     def tick(self):
-        if self.finished_path(1) and self.get_shooter_state() == "prime_high":
-            return StartBalancePath(self.ros_node)
-        return self
-    
-
-              
-class StartBalancePath(StartPath):
-    def initialize(self):
-        self.log_state()
-    
-    def execute_action(self):
-        self.start_paths(2)
-    
-    def tick(self):
-        if self.finished_path(2):
+        if self.finished_path(1) and self.get_shooter_state() == "prime_low":
             return Balance(self.ros_node)
         return self
+    
     
 class Balance(AutoBalance):
     def initialize(self):
@@ -128,16 +115,28 @@ class Balance(AutoBalance):
         
     def tick(self):
         if self.is_balanced():
-            return ShootCube(self.ros_node)
+            return WaitForStabalize(self.ros_node)
         return self
     
+class WaitForStabalize(AutoBalance):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        pass
+        
+    def tick(self):
+        if self.check_timer(0.8):
+            return ShootCube(self.ros_node)
+        return self
+
 class ShootCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
         self.shoot_low()
     def tick(self):
-        if (self.get_shooter_state() == "shoot_high"):
+        if (self.get_shooter_state() == "shoot_low"):
             return IdleShooter(self.ros_node)
         return self
     
