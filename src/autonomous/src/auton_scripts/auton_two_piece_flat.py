@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 4
-auton_title = "2 Piece Left (Blue)"
+auton_id = 2
+auton_title = "2 Piece Flat"
 
 # Start of our states
 class Idle(SetIdle):
@@ -30,6 +30,7 @@ class MoveFirstCone(Arm):
         self.move_cone_high()
         
     def tick(self):
+        rospy.logdebug("State " + self.get_arm_state())
         if self.get_arm_state() == "high":
             return RetractArm(self.ros_node)
         return self
@@ -54,7 +55,7 @@ class InsideBot(Arm):
         self.inside_bot()
         
     def tick(self):
-        if self.get_arm_state() == "inside":
+        if self.check_timer(0.65):
             return StartFirstPath(self.ros_node)
         return self
     
@@ -70,7 +71,9 @@ class StartFirstPath(StartPath):
         self.start_paths(0)
 
     def tick(self):
-        return MoveIntakeCube(self.ros_node)
+        if self.get_arm_state() == "inside":
+            return MoveIntakeCube(self.ros_node)
+        return self
     
 class MoveIntakeCube(Shooter):
     def initialize(self):
@@ -78,7 +81,7 @@ class MoveIntakeCube(Shooter):
     def execute_action(self):
         self.intake()
     def tick(self):
-        if self.finished_path(0):
+        if self.finished_path(0) and self.get_shooter_state() == "intake":
             return PrimeCube(self.ros_node)
         return self
     
@@ -118,12 +121,10 @@ class IdleShooter(Shooter):
     def execute_action(self):
         self.idle()
     def tick(self):
-        if (self.get_shooter_state() == "idle"):
-            if (self.should_balance()):
-                return StartBalancePath(self.ros_node)
-            return Final(self.ros_node)
-        return self
-      
+        if (self.should_balance()):
+            return StartBalancePath(self.ros_node)
+        return Final(self.ros_node)
+              
 class StartBalancePath(StartPath):
     def initialize(self):
         self.log_state()
@@ -186,6 +187,7 @@ def start(ros_node):
     ros_node.subscribe("/auto/balance/should_balance", Bool)
     ros_node.subscribe("/auto/arm/state", String)
     ros_node.subscribe("/auto/vision/state", String)
+    ros_node.subscribe("/auto/shooter/state", String)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown

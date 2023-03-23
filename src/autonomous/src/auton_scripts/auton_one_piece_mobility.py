@@ -1,10 +1,10 @@
 import rospy
-from std_msgs.msg import Float32, String
-from .auton_modules.state import SetIdle, State, StartPath
+from std_msgs.msg import Float32, String, Bool
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Intake, Shooter
 
 # The id of the auton, used for picking auton
 auton_id = 1
-auton_title = "P Path"
+auton_title = "1 Piece Mobility"
 
 # Start of our states
 class Idle(SetIdle):
@@ -20,39 +20,58 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return StartFirstPath(self.ros_node)
-
-class StartFirstPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
+        return PrimeCube(self.ros_node)
+  
+class PrimeCube(Shooter):
     def initialize(self):
         self.log_state()
-        self.start_path(0)
-
+        
     def execute_action(self):
-        pass
-
+        self.prime_high()
+    
     def tick(self):
-        if self.finished_path(0):
-            return StartSecondPath(self.ros_node)
+        if (self.get_shooter_state() == "prime_high"):
+            return ShootCube(self.ros_node)
         return self
-
-class StartSecondPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
+    
+class ShootCube(Shooter):
     def initialize(self):
         self.log_state()
-        self.start_path(1)
-
+        
     def execute_action(self):
-        pass
+        self.shoot_high()
+    
+    def tick(self):
+        if (self.get_shooter_state() == "shoot_high"):
+            self.idle()
+            return StartFirstPath(self.ros_node)
+        return self
+      
+class StartFirstPath(StartPath):
+  """
+  The state which publishes the first path to follow
+  """
+
+  def initialize(self):
+      self.log_state()
+
+  def execute_action(self):
+      self.start_paths(0)
+
+  def tick(self):
+      if self.finished_path(0):
+          return Balance(self.ros_node)
+      return self
+
+class Balance(AutoBalance):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.balance(reverse=True)
         
     def tick(self):
-        if self.finished_path(1):
+        if self.is_balanced():
             return Final(self.ros_node)
         return self
 
@@ -90,6 +109,9 @@ def start(ros_node):
     # Pick which topics to subscribe to
     ros_node.subscribe("/pathTable/status/path", Float32)
     ros_node.subscribe("/pathTable/status/finishedPath", String)
+    ros_node.subscribe("/auto/balance/state", Bool)
+    ros_node.subscribe("/auto/balance/should_balance", Bool)
+    ros_node.subscribe("/auto/vision/set", String)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown

@@ -43,6 +43,7 @@ class ROSNode:
         self.subscribe("/auto/balance/status", String)
         self.subscribe("/auto/balance/should_balance", Bool)
         self.subscribe("/auto/arm/state", String)
+        self.subscribe("/auto/shooter/state", String)
         self.subscribe("/auto/is_blue", Bool)
         self.subscribe("/auto/shooter/state", String)
 
