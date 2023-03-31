@@ -71,10 +71,21 @@ class StartFirstPath(StartPath):
   def tick(self):
       if self.finished_path(0):
         if self.should_balance():
-            return Balance(self.ros_node)
+          return Wait(self.ros_node)
         return Final(self.ros_node)
       return self
 
+class Wait(State):
+    def initialize(self):
+      self.log_state()
+
+    def execute_action(self):
+      self.get_path()
+
+    def tick(self):
+        if self.check_timer(1):
+            return Balance(self.ros_node)
+        return self
 class Balance(AutoBalance):
     def initialize(self):
         self.log_state()

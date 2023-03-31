@@ -81,7 +81,7 @@ class MoveIntakeCube(Shooter):
     def execute_action(self):
         self.intake()
     def tick(self):
-        if self.finished_path(0) and self.get_shooter_state() == "intake":
+        if self.finished_path(0) and (self.get_shooter_state() == "intake" or self.check_timer(3.5)):
             return PrimeCube(self.ros_node)
         return self
     
@@ -101,7 +101,7 @@ class StartSecondPath(StartPath):
         self.start_paths(1)
 
     def tick(self):
-        if self.finished_path(1) and self.get_shooter_state() == "prime_low":
+        if self.finished_path(1):
             return Balance(self.ros_node)
         return self
     
@@ -126,7 +126,7 @@ class WaitForStabalize(AutoBalance):
         pass
         
     def tick(self):
-        if self.check_timer(0.8):
+        if self.check_timer(0.8) and self.get_shooter_state() == "prime_low":
             return ShootCube(self.ros_node)
         return self
 
