@@ -3,7 +3,7 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 2
+auton_id = 4
 auton_title = "2 Piece Charger"
 # Start of our states
 class Idle(SetIdle):

@@ -78,10 +78,7 @@ class State(object):
     def finished_path(self, path_num):
         string_array = self.ros_node.get_data("/pathTable/status/finishedPath").split()
 
-        if (string_array[0] == "true" and int(string_array[1]) >= path_num):
-            return True
-        else:
-            return False
+        return (string_array[0] == "true" and int(string_array[1]) == path_num) or int(string_array[1]) > path_num
         
     def is_balanced(self):
         return self.ros_node.get_data("/auto/balance/state")
