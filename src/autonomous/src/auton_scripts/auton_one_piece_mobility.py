@@ -20,32 +20,42 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return PrimeCube(self.ros_node)
+        return MoveFirstCone(self.ros_node)
   
-class PrimeCube(Shooter):
+class MoveFirstCone(Arm):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.prime_high()
-    
+        self.move_cone_high()
+        
     def tick(self):
-        if (self.get_shooter_state() == "prime_high"):
-            return ShootCube(self.ros_node)
+        rospy.logdebug("State " + self.get_arm_state())
+        if self.get_arm_state() == "high":
+            return RetractArm(self.ros_node)
         return self
     
-class ShootCube(Shooter):
+class RetractArm(Arm):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.shoot_high()
-    
+        self.retract()
+        
     def tick(self):
-        if (self.get_shooter_state() == "shoot_high"):
-            self.idle()
-            return StartFirstPath(self.ros_node)
+        if self.get_arm_state() == "retract":
+            return InsideBot(self.ros_node)
         return self
+    
+class InsideBot(Arm):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.inside_bot()
+        
+    def tick(self):
+        return StartFirstPath(self.ros_node)
       
 class StartFirstPath(StartPath):
   """
@@ -60,7 +70,9 @@ class StartFirstPath(StartPath):
 
   def tick(self):
       if self.finished_path(0):
-          return Balance(self.ros_node)
+        if self.should_balance():
+            return Balance(self.ros_node)
+        return Final(self.ros_node)
       return self
 
 class Balance(AutoBalance):
@@ -110,7 +122,7 @@ def start(ros_node):
     ros_node.subscribe("/pathTable/status/path", Float32)
     ros_node.subscribe("/pathTable/status/finishedPath", String)
     ros_node.subscribe("/auto/balance/state", Bool)
-    ros_node.subscribe("/auto/balance/should_balance", Bool)
+    ros_node.subscribe("/auto/balance/r_balance", Bool)
     ros_node.subscribe("/auto/vision/set", String)
 
     # Return the wanted Start and Shutdown state

@@ -3,9 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 4
+auton_id = 2
 auton_title = "2 Piece Charger"
-
 # Start of our states
 class Idle(SetIdle):
     """
@@ -30,6 +29,7 @@ class MoveFirstCone(Arm):
         self.move_cone_high()
         
     def tick(self):
+        rospy.logdebug("State " + self.get_arm_state())
         if self.get_arm_state() == "high":
             return RetractArm(self.ros_node)
         return self
@@ -54,7 +54,9 @@ class InsideBot(Arm):
         self.inside_bot()
         
     def tick(self):
-      return StartFirstPath(self.ros_node)
+        if self.check_timer(0.65):
+            return StartFirstPath(self.ros_node)
+        return self
     
 class StartFirstPath(StartPath):
     """
@@ -65,11 +67,12 @@ class StartFirstPath(StartPath):
         self.log_state()
 
     def execute_action(self):
-        self.start_paths(0)
+        self.start_paths(0, 1)
 
     def tick(self):
-      if self.get_arm_state() == "inside":
-        return MoveIntakeCube(self.ros_node)
+        if self.finished_path(0):
+            return MoveIntakeCube(self.ros_node)
+        return self
     
 class MoveIntakeCube(Shooter):
     def initialize(self):
@@ -77,7 +80,7 @@ class MoveIntakeCube(Shooter):
     def execute_action(self):
         self.intake()
     def tick(self):
-        if self.finished_path(0) and self.get_shooter_state() == "intake":
+        if self.finished_path(1) and self.get_shooter_state() == "intake":
             return PrimeCube(self.ros_node)
         return self
     
@@ -85,19 +88,31 @@ class PrimeCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.prime_high()
+        self.prime_low()
     def tick(self):
-        return StartSecondPath(self.ros_node)
+        return StartBalancePath(self.ros_node)
     
-class StartSecondPath(StartPath):
+class StartBalancePath(StartPath):
     def initialize(self):
         self.log_state()
-
+    
     def execute_action(self):
-        self.start_paths(1)
-
+        self.start_paths(2)
+    
     def tick(self):
-        if self.finished_path(1) and self.get_shooter_state() == "prime_high":
+        if self.finished_path(2):
+            return Balance(self.ros_node)
+        return self
+     
+class Balance(AutoBalance):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        self.balance(reverse=True)
+        
+    def tick(self):
+        if self.is_balanced() and self.get_shooter_state() == "prime_low":
             return ShootCube(self.ros_node)
         return self
     
@@ -117,35 +132,7 @@ class IdleShooter(Shooter):
     def execute_action(self):
         self.idle()
     def tick(self):
-        if (self.get_shooter_state() == "idle"):
-            if (self.should_balance()):
-                return StartBalancePath(self.ros_node)
-            return Final(self.ros_node)
-        return self
-      
-class StartBalancePath(StartPath):
-    def initialize(self):
-        self.log_state()
-    
-    def execute_action(self):
-        self.start_paths(2)
-    
-    def tick(self):
-        if self.finished_path(2):
-            return Balance(self.ros_node)
-        return self
-    
-class Balance(AutoBalance):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.balance()
-        
-    def tick(self):
-        if self.is_balanced():
-            return Final(self.ros_node)
-        return self
+        return Final(self.ros_node)
 
 class Final(State):
     """
@@ -185,6 +172,7 @@ def start(ros_node):
     ros_node.subscribe("/auto/balance/should_balance", Bool)
     ros_node.subscribe("/auto/arm/state", String)
     ros_node.subscribe("/auto/vision/state", String)
+    ros_node.subscribe("/auto/shooter/state", String)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown
