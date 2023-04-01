@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float32, String, Bool
-from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter
 
 # The id of the auton, used for picking auton
 auton_id = 5
@@ -20,52 +20,57 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return MoveFirstCone(self.ros_node)
+        return PrimeShooter(self.ros_node)
     
-class MoveFirstCone(Arm):
+class PrimeShooter(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.move_cone_high()
+        self.prime_high()
         
     def tick(self):
-        if self.get_arm_state() == "cone_high":
-            return PlaceFirstCone(self.ros_node)
+        if self.get_shooter_state() == "prime_high":
+            return ShootHigh(self.ros_node)
         return self
         
-class PlaceFirstCone(Arm):
+class ShootHigh(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.place()
+        self.shoot_high()
         
     def tick(self):
-        if self.check_timer(0.3):
-            return MoveIntakeCube(self.ros_node)
+        if self.get_shooter_state() == "shoot_high":
+            return IdleShooter(self.ros_node)
         return self
     
-class MoveIntakeCube(StartPath, Arm):
+class IdleShooter(Shooter):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.idle()
+    def tick(self):
+        return IntakeCone(self.ros_node)
+    
+class StartFirstPath(StartPath):
     def initialize(self):
         self.log_state()
     def execute_action(self):
         self.start_paths(0)
-        self.move_intake()
     def tick(self):
-        if self.finished_path(0) and self.get_arm_state() == "intake":
-            return IntakeCube(self.ros_node)
-        return self
+        if self.get_shooter_state() == "idle":
+            return IntakeCone(self.ros_node)
         
-class IntakeCube(Arm):
+class IntakeCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.intake()
+        self.move_intake()
     def tick(self):
-        if (self.check_timer(0.5)):
+        if self.finished_path(0):
             return MovePlaceCube(self.ros_node)
-        return self
     
 class MovePlaceCube(StartPath, Arm):
     def initialize(self):
