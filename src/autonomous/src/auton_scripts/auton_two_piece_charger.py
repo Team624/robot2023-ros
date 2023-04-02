@@ -110,6 +110,18 @@ class Balance(AutoBalance):
         
     def tick(self):
         if self.is_balanced() and self.get_shooter_state() == "prime_low":
+            return WaitForChargerStabalize(self.ros_node)
+        return self
+    
+class WaitForChargerStabalize(State):
+    def initialize(self):
+        self.log_state()
+        
+    def execute_action(self):
+        pass
+        
+    def tick(self):
+        if self.check_timer(1.18):
             return ShootCube(self.ros_node)
         return self
     

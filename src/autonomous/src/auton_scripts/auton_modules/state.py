@@ -6,6 +6,7 @@ import time
 import rospkg 
 import math
 from autonomous.msg import PathStart
+import random
 
 global data
 data = []
@@ -133,8 +134,8 @@ class SetIdle(State):
         self.ros_node.publish("/pathTable/startPathIndex", PathStart, msg, latching = True)
         self.ros_node.publish("/auto/balance/set", String, "false false", latching = True)
         self.ros_node.publish("/auto/arm/set", String, "none", latching = True)
-        self.ros_node.publish("/auto/vision/align", String, "-1 -1", latching = True)
-        self.ros_node.publish("/auto/intake/set", String, "idle")
+        self.ros_node.publish("/auto/vision/set", String, "none", latching = True)
+        self.ros_node.publish("/auto/shooter/set", String, "none")
 
 class StartPath(State):
 
@@ -170,7 +171,7 @@ class Arm(State):
 
 class Vision(State):
     def align_cone(self):
-        self.ros_node.publish("/auto/vision/set", String, "cone", latching = True)
+        self.ros_node.publish("/auto/vision/set", String, "cone" + str(random.randint(0, 1000000)), latching = True)
         
     def align_cube(self, grid):
         self.ros_node.publish("/auto/vision/set", String, "cube " + grid, latching = True)
