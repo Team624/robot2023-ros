@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float32, String, Bool
-from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter, Vision
 
 # The id of the auton, used for picking auton
 auton_id = 5
@@ -88,9 +88,19 @@ class StartSecondPath(StartPath):
         self.start_paths(1)
     def tick(self):
         if self.finished_path(1):
-            return MoveConeHigh(self.ros_node)
+            return AlignFirstCone(self.ros_node)
         return self
         
+class AlignFirstCone(Vision):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.align_cone()
+    def tick(self):
+        if self.is_vision_aligned():
+            return MoveConeHigh(self.ros_node)
+        return self
+    
 class MoveConeHigh(Arm):
     def initialize(self):
         self.log_state()
@@ -144,6 +154,16 @@ class SecondInsideBot(Arm):
         self.inside_bot()
     def tick(self):
         if self.finished_path(4):
+            return AlignSecondCone(self.ros_node)
+        return self
+    
+class AlignSecondCone(Vision):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.align_cone()
+    def tick(self):
+        if self.is_vision_aligned():
             return MoveSecondConeHigh(self.ros_node)
         return self
     

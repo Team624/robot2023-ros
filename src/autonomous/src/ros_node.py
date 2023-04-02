@@ -45,6 +45,7 @@ class ROSNode:
         self.subscribe("/auto/arm/state", String)
         self.subscribe("/auto/shooter/state", String)
         self.subscribe("/auto/is_blue", Bool)
+        self.subscribe("/auto/vision/state", Bool)
 
         # Used for timing events
         self.start_time = time.time()

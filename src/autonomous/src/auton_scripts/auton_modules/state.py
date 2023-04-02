@@ -91,6 +91,9 @@ class State(object):
     
     def get_shooter_state(self):
         return self.ros_node.get_data("/auto/shooter/state")
+    
+    def is_vision_aligned(self):
+        return self.ros_node.get_data("/auto/vision/state")
 
     # This runs in the child class when created
     def initialize(self):
@@ -166,11 +169,11 @@ class Arm(State):
         self.ros_node.publish("/auto/arm/set", String, "move_inside_bot", latching = True)
 
 class Vision(State):
-    def start_align_node(self, grid, column):
-        self.ros_node.publish("/auto/vision/set", String, f"{grid} {column}", latching = True)
-    
-    def is_aligned(self, grid, column):
-        return self.ros_node.get_data("/auto/vision/status") == f"{grid} {column}"
+    def align_cone(self):
+        self.ros_node.publish("/auto/vision/set", String, "cone", latching = True)
+        
+    def align_cube(self, grid):
+        self.ros_node.publish("/auto/vision/set", String, "cube " + grid, latching = True)
 
 class Intake(State):
     def run_intake(self):
