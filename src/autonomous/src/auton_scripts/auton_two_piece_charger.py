@@ -29,10 +29,23 @@ class MoveFirstCone(Arm):
         self.move_cone_high()
         
     def tick(self):
-        rospy.logdebug("State " + self.get_arm_state())
         if self.get_arm_state() == "high":
-            return RetractArm(self.ros_node)
+            return StartFirstPath(self.ros_node)
         return self
+    
+class StartFirstPath(StartPath):
+    """
+    The state which publishes the first path to follow
+    """
+
+    def initialize(self):
+        self.log_state()
+
+    def execute_action(self):
+        self.start_paths(0, 1)
+
+    def tick(self):
+        return RetractArm(self.ros_node)
     
 class RetractArm(Arm):
     def initialize(self):
@@ -53,22 +66,6 @@ class InsideBot(Arm):
     def execute_action(self):
         self.inside_bot()
         
-    def tick(self):
-        if self.check_timer(0.65):
-            return StartFirstPath(self.ros_node)
-        return self
-    
-class StartFirstPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-
-    def execute_action(self):
-        self.start_paths(0, 1)
-
     def tick(self):
         if self.finished_path(0):
             return MoveIntakeCube(self.ros_node)
@@ -120,9 +117,9 @@ class ShootCube(Shooter):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.shoot_high()
+        self.shoot_low()
     def tick(self):
-        if (self.get_shooter_state() == "shoot_high"):
+        if (self.get_shooter_state() == "shoot_low"):
             return IdleShooter(self.ros_node)
         return self
     

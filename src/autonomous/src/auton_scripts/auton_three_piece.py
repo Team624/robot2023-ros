@@ -52,7 +52,7 @@ class IdleShooter(Shooter):
     def execute_action(self):
         self.idle()
     def tick(self):
-        return IntakeCone(self.ros_node)
+        return StartFirstPath(self.ros_node)
     
 class StartFirstPath(StartPath):
     def initialize(self):
@@ -62,7 +62,7 @@ class StartFirstPath(StartPath):
     def tick(self):
         if self.get_shooter_state() == "idle":
             return IntakeCone(self.ros_node)
-        
+        return self
 class IntakeCone(Arm):
     def initialize(self):
         self.log_state()
@@ -70,96 +70,110 @@ class IntakeCone(Arm):
         self.move_intake()
     def tick(self):
         if self.finished_path(0):
-            return MovePlaceCube(self.ros_node)
+            return InsideBotArm(self.ros_node)
+        return self
     
-class MovePlaceCube(StartPath, Arm):
+class InsideBotArm(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_cube_high()
+        self.inside_bot()
+    def tick(self):
+        return StartSecondPath(self.ros_node)
+    
+class StartSecondPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
         self.start_paths(1)
     def tick(self):
-        if (self.finished_path(1) and self.get_arm_state() == "cube_high"):
-            return PlaceCube(self.ros_node)
-        return PlaceCube(self.ros_node)
-    
-class PlaceCube(Arm):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.place()
-    def tick(self):
-        if self.check_timer(0.3):
-            return MoveIntakeSecondCone(self.ros_node)
+        if self.finished_path(1):
+            return MoveConeHigh(self.ros_node)
         return self
-
-class MoveIntakeSecondCone(StartPath, Arm):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.move_intake()
-        self.start_paths(2, 3)
-    def tick(self):
-        if (self.finished_path(3) and self.get_arm_state() == "intake"):
-            return IntakeSecondCone(self.ros_node)
-        return self
-
-class IntakeSecondCone(Arm):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.intake()
-    def tick(self):
-        if (self.check_timer(0.5)):
-            return MovePlaceSecondCone(self.ros_node)
-        return self
-    
-class MovePlaceSecondCone(StartPath, Arm):
+        
+class MoveConeHigh(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
         self.move_cone_high()
+    def tick(self):
+        if self.get_arm_state() == "high":
+            return RetractFirstCone(self.ros_node)
+        return self
+        
+class RetractFirstCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.retract()
+    def tick(self):
+        if self.get_arm_state() == "retract":
+            return StartThirdPath(self.ros_node)
+        return self
+    
+class StartThirdPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(2, 3)
+    def tick(self):
+        return MoveSecondIntake(self.ros_node)
+    
+class MoveSecondIntake(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.move_intake()
+    def tick(self):
+        if self.get_arm_state() == "intake" and self.finished_path(3):
+            return StartFourthPath(self.ros_node)
+        return self
+    
+class StartFourthPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
         self.start_paths(4)
     def tick(self):
-        if (self.finished_path(4) and self.get_arm_state() == "cone_high"):
-            return PlaceSecondCone(self.ros_node)
-        return self
+        return SecondInsideBot(self.ros_node)
     
-class PlaceSecondCone(Arm):
+class SecondInsideBot(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.place()
+        self.inside_bot()
     def tick(self):
-        if (self.check_timer(0.3)):
-            if (self.should_balance()):
-                return StartBalancePath(self.ros_node)
-            return Final(self.ros_node)
+        if self.finished_path(4):
+            return MoveSecondConeHigh(self.ros_node)
+        return self
+    
+class MoveSecondConeHigh(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.move_cone_high()
+    def tick(self):
+        if self.get_arm_state() == "high":
+            return RetractSecondCone(self.ros_node)
+        return self
+        
+class RetractSecondCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.retract()
+    def tick(self):
+        if self.get_arm_state() == "retract":
+            return FinalInsideBot(self.ros_node)
         return self
 
-class StartBalancePath(StartPath):
+class FinalInsideBot(Arm):
     def initialize(self):
         self.log_state()
-    
     def execute_action(self):
-        self.start_paths(5)
-    
+        self.inside_bot()
     def tick(self):
-        if self.finished_path(5):
-            return Balance(self.ros_node)
-        return self
-    
-class Balance(AutoBalance):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.balance()
-        
-    def tick(self):
-        if self.is_balanced():
-            return Final(self.ros_node)
-        return self
+        return Final(self.ros_node)
 
 class Final(State):
     """
