@@ -151,23 +151,37 @@ class AutoBalance(State):
         self.ros_node.publish("/auto/balance/set", String, "true " + str(reverse).lower(), latching = True)
         
 class Arm(State):
-    def move_intake(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_intake", latching = True)
-    def move_cone_high(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cone_high", latching = True)
-    def move_cone_mid(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cone_mid", latching = True)
-    def move_cone_low(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_cone_low", latching = True)
+    def tipped_intake(self):
+        self.ros_node.publish("/auto/arm/set", String, "tipped_intake", latching = True)
+    def standing_intake(self):
+        self.ros_node.publish("/auto/arm/set", String, "standing_intake", latching = True)
+        
+    def full_score_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "full_score_high", latching = True)
+    def full_score_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "full_score_mid", latching = True)
+    def full_score_low(self):
+        self.ros_node.publish("/auto/arm/set", String, "full_score_low", latching = True)
+        
+    def fast_score_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "fast_score_high", latching = True)
+    def fast_score_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "fast_score_mid", latching = True)
     
-    def place(self):
-        self.ros_node.publish("/auto/arm/set", String, "place", latching = True)
+    def pre_score_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "pre_score_high", latching = True)
+    def pre_score_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "pre_score_mid", latching = True)
+        
+    def finish_score_high(self):
+        self.ros_node.publish("/auto/arm/set", String, "finish_score_high", latching = True)
+    def finish_score_mid(self):
+        self.ros_node.publish("/auto/arm/set", String, "finish_score_mid", latching = True)
         
     def retract(self):
         self.ros_node.publish("/auto/arm/set", String, "retract", latching = True)
-        
     def inside_bot(self):
-        self.ros_node.publish("/auto/arm/set", String, "move_inside_bot", latching = True)
+        self.ros_node.publish("/auto/arm/set", String, "inside_bot", latching = True)
 
 class Vision(State):
     def align_cone(self):
@@ -175,14 +189,6 @@ class Vision(State):
         
     def align_cube(self, grid):
         self.ros_node.publish("/auto/vision/set", String, "cube " + grid, latching = True)
-
-class Intake(State):
-    def run_intake(self):
-        self.ros_node.publish("/auto/intake/set", String, "intake", latching=True)
-    def idle_intake(self):
-        self.ros_node.publish("/auto/intake/set", String, "idle", latching=True)
-    def reverse_cone(self):
-        self.ros_node.publish("/auto/intake/set", String, "cone", latching=True)
         
 class Shooter(State):
     def prime_high(self):

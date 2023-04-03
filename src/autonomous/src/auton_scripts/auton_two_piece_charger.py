@@ -19,17 +19,17 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return MoveFirstCone(self.ros_node)
+        return ScoreFirstCone(self.ros_node)
 
-class MoveFirstCone(Arm):
+class ScoreFirstCone(Arm):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.move_cone_high()
+        self.fast_score_high()
         
     def tick(self):
-        if self.get_arm_state() == "high":
+        if self.get_arm_state() == "fast_score_high":
             return StartFirstPath(self.ros_node)
         return self
     
@@ -77,7 +77,7 @@ class MoveIntakeCube(Shooter):
     def execute_action(self):
         self.intake()
     def tick(self):
-        if self.finished_path(1) and self.get_shooter_state() == "intake":
+        if self.finished_path(1):
             return PrimeCube(self.ros_node)
         return self
     
