@@ -69,7 +69,7 @@ class IntakeCone(Arm):
     def execute_action(self):
         self.move_intake()
     def tick(self):
-        if self.finished_path(0):
+        if self.finished_path(0) and self.get_arm_state()=="tipped_intake":
             return PreHighCone(self.ros_node)
         return self
 
@@ -97,7 +97,7 @@ class AlignFirstCone(Vision):
     def execute_action(self):
         self.align_cone()
     def tick(self):
-        if self.is_vision_aligned():
+        if self.is_vision_aligned() and self.get_arm_state()=="pre_score_high":
             return ConeHighPlace(self.ros_node)
         return self
 class ConeHighPlace(Arm):
@@ -106,7 +106,7 @@ class ConeHighPlace(Arm):
     def execute_action(self):
         self.finish_score_high()
     def tick(self):
-        if self.get_arm_state() == "high_place":
+        if self.get_arm_state() == "finish_score_high":
             return RetractFirstCone(self.ros_node)
         return self
     
@@ -135,7 +135,7 @@ class MoveSecondIntake(Arm):
     def execute_action(self):
         self.tipped_intake()
     def tick(self):
-        if self.get_arm_state() == "intake" and self.finished_path(2):
+        if self.get_arm_state() == "tipped_intake" and self.finished_path(2):
             return StartThirdPath(self.ros_node)
         return self
     
@@ -164,7 +164,7 @@ class AlignSecondCone(Vision):
     def execute_action(self):
         self.align_cone()
     def tick(self):
-        if self.is_vision_aligned():
+        if self.is_vision_aligned() and self.get_arm_state()=="pre_score_high":
             return ConeHighPlace2(self.ros_node)
         return self
 class ConeHighPlace2(Arm):
@@ -173,7 +173,7 @@ class ConeHighPlace2(Arm):
     def execute_action(self):
         self.finish_score_high()
     def tick(self):
-        if self.get_arm_state() == "high_place":
+        if self.get_arm_state() == "finish_score_high":
             return RetractSecondCone(self.ros_node)
         return self
      
