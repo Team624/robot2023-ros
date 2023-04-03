@@ -19,18 +19,17 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return MoveFirstCone(self.ros_node)
+        return ScoreFirstCone(self.ros_node)
 
-class MoveFirstCone(Arm):
+class ScoreFirstCone(Arm):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.move_cone_high()
+        self.fast_score_high()
         
     def tick(self):
-        rospy.logdebug("State " + self.get_arm_state())
-        if self.get_arm_state() == "high":
+        if self.get_arm_state() == "fast_score_high":
             return RetractArm(self.ros_node)
         return self
     

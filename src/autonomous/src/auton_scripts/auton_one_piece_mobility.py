@@ -27,11 +27,10 @@ class MoveFirstCone(Arm):
         self.log_state()
         
     def execute_action(self):
-        self.move_cone_high()
+        self.full_score_high()
         
     def tick(self):
-        rospy.logdebug("State " + self.get_arm_state())
-        if self.get_arm_state() == "high":
+        if self.get_arm_state() == "full_score_high":
             return RetractArm(self.ros_node)
         return self
     
@@ -80,12 +79,13 @@ class Wait(State):
       self.log_state()
 
     def execute_action(self):
-      self.get_path()
+      pass
 
     def tick(self):
         if self.check_timer(1):
             return Balance(self.ros_node)
         return self
+    
 class Balance(AutoBalance):
     def initialize(self):
         self.log_state()

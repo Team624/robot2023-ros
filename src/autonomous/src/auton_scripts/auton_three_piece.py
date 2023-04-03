@@ -60,24 +60,23 @@ class StartFirstPath(StartPath):
     def execute_action(self):
         self.start_paths(0)
     def tick(self):
-        if self.get_shooter_state() == "idle":
-            return IntakeCone(self.ros_node)
-        return self
-class IntakeCone(Arm):
+        return IntakeFirstCone(self.ros_node)
+    
+class IntakeFirstCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_intake()
+        self.tipped_intake()
     def tick(self):
         if self.finished_path(0):
-            return InsideBotArm(self.ros_node)
+            return PreScoreFirstCone(self.ros_node)
         return self
     
-class InsideBotArm(Arm):
+class PreScoreFirstCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.inside_bot()
+        self.pre_score_high()
     def tick(self):
         return StartSecondPath(self.ros_node)
     
@@ -97,17 +96,17 @@ class AlignFirstCone(Vision):
     def execute_action(self):
         self.align_cone()
     def tick(self):
-        if self.is_vision_aligned():
-            return MoveConeHigh(self.ros_node)
+        if self.is_vision_aligned() and self.get_arm_state() == "pre_score_high":
+            return FinishScoreFirstCone(self.ros_node)
         return self
     
-class MoveConeHigh(Arm):
+class FinishScoreFirstCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_cone_high()
+        self.finish_score_high()
     def tick(self):
-        if self.get_arm_state() == "high":
+        if self.get_arm_state() == "finish_score_high":
             return RetractFirstCone(self.ros_node)
         return self
         
@@ -117,9 +116,7 @@ class RetractFirstCone(Arm):
     def execute_action(self):
         self.retract()
     def tick(self):
-        if self.get_arm_state() == "retract":
-            return StartThirdPath(self.ros_node)
-        return self
+        return StartThirdPath(self.ros_node)
     
 class StartThirdPath(StartPath):
     def initialize(self):
@@ -127,15 +124,15 @@ class StartThirdPath(StartPath):
     def execute_action(self):
         self.start_paths(2, 3)
     def tick(self):
-        return MoveSecondIntake(self.ros_node)
+        return IntakeSecondCone(self.ros_node)
     
-class MoveSecondIntake(Arm):
+class IntakeSecondCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_intake()
+        self.tipped_intake()
     def tick(self):
-        if self.get_arm_state() == "intake" and self.finished_path(3):
+        if self.get_arm_state() == "tipped_intake" and self.finished_path(3):
             return StartFourthPath(self.ros_node)
         return self
     
@@ -145,13 +142,13 @@ class StartFourthPath(StartPath):
     def execute_action(self):
         self.start_paths(4)
     def tick(self):
-        return SecondInsideBot(self.ros_node)
+        return PreScoreSecondCone(self.ros_node)
     
-class SecondInsideBot(Arm):
+class PreScoreSecondCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.inside_bot()
+        self.pre_score_high()
     def tick(self):
         if self.finished_path(4):
             return AlignSecondCone(self.ros_node)
@@ -163,17 +160,17 @@ class AlignSecondCone(Vision):
     def execute_action(self):
         self.align_cone()
     def tick(self):
-        if self.is_vision_aligned():
-            return MoveSecondConeHigh(self.ros_node)
+        if self.is_vision_aligned() and self.get_arm_state() == "pre_score_high":
+            return FinishScoreSecondCone(self.ros_node)
         return self
     
-class MoveSecondConeHigh(Arm):
+class FinishScoreSecondCone(Arm):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.move_cone_high()
+        self.finish_score_high()
     def tick(self):
-        if self.get_arm_state() == "high":
+        if self.get_arm_state() == "finish_score_high":
             return RetractSecondCone(self.ros_node)
         return self
         
