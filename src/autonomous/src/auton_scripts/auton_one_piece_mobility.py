@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float32, String, Bool
-from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Intake, Shooter
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter
 
 # The id of the auton, used for picking auton
 auton_id = 1

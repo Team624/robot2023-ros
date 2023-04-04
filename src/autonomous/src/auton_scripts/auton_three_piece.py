@@ -140,7 +140,7 @@ class StartFourthPath(StartPath):
     def initialize(self):
         self.log_state()
     def execute_action(self):
-        self.start_paths(4)
+        self.start_paths(4, 5)
     def tick(self):
         return PreScoreSecondCone(self.ros_node)
     
@@ -150,7 +150,7 @@ class PreScoreSecondCone(Arm):
     def execute_action(self):
         self.pre_score_high()
     def tick(self):
-        if self.finished_path(4):
+        if self.finished_path(5):
             return AlignSecondCone(self.ros_node)
         return self
     
