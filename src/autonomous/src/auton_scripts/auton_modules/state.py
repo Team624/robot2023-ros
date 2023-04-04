@@ -191,6 +191,12 @@ class Vision(State):
         self.ros_node.publish("/auto/vision/set", String, "cube " + grid, latching = True)
         
 class Shooter(State):
+    def prime_high_over_bump(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_high_over_bump", latching=True)
+    def prime_high_flat_community(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_high_flat_community", latching=True)
+    def prime_high_charger(self):
+        self.ros_node.publish("/auto/shooter/set", String, "prime_high_charger", latching=True)
     def prime_high(self):
         self.ros_node.publish("/auto/shooter/set", String, "prime_high", latching=True)
     def prime_mid(self):
@@ -199,6 +205,12 @@ class Shooter(State):
         self.ros_node.publish("/auto/shooter/set", String, "prime_low", latching=True)
     def intake(self):
         self.ros_node.publish("/auto/shooter/set", String, "deploy_intake", latching=True)
+    def shoot_high_over_bump(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_high_over_bump", latching=True)
+    def shoot_high_flat_community(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_high_flat_community", latching=True)
+    def shoot_high_charger(self):
+        self.ros_node.publish("/auto/shooter/set", String, "shoot_high_charger", latching=True)
     def shoot_high(self):
         self.ros_node.publish("/auto/shooter/set", String, "shoot_high", latching=True)
     def shoot_mid(self):
