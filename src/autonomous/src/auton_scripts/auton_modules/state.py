@@ -182,6 +182,9 @@ class Arm(State):
         self.ros_node.publish("/auto/arm/set", String, "retract", latching = True)
     def inside_bot(self):
         self.ros_node.publish("/auto/arm/set", String, "inside_bot", latching = True)
+        
+    def slow_mode(self, slow):
+        self.ros_node.publish("/auto/arm/slow", Bool, slow, latching = True)
 
 class Vision(State):
     def align_cone(self):

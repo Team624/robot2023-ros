@@ -1,10 +1,11 @@
 import rospy
 from std_msgs.msg import Float32, String, Bool
-from .auton_modules.state import SetIdle, State, StartPath, Arm, AutoBalance, Shooter
+from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter, Vision
 
 # The id of the auton, used for picking auton
-auton_id = 4
-auton_title = "2 Piece Charger"
+auton_id = 5
+auton_title = "2.5 Piece"
+
 # Start of our states
 class Idle(SetIdle):
     """
@@ -19,129 +20,29 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return SetFastMode(self.ros_node)
+        return PrimeShooter(self.ros_node)
     
-class SetFastMode(Arm):
-    def initialize(self):
-        self.log_state()
-
-    def execute_action(self):
-        self.slow_mode(False)
-
-    def tick(self):
-        return ScoreFirstCone(self.ros_node)
-
-class ScoreFirstCone(Arm):
+class PrimeShooter(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.fast_score_high()
+        self.prime_high()
         
     def tick(self):
-        if self.get_arm_state() == "fast_score_high":
-            return StartFirstPath(self.ros_node)
+        if self.get_shooter_state() == "prime_high":
+            return ShootHigh(self.ros_node)
         return self
-    
-class StartFirstPath(StartPath):
-    """
-    The state which publishes the first path to follow
-    """
-
-    def initialize(self):
-        self.log_state()
-
-    def execute_action(self):
-        self.start_paths(0, 1)
-
-    def tick(self):
-        return RetractArm(self.ros_node)
-    
-class RetractArm(Arm):
+        
+class ShootHigh(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.retract()
+        self.shoot_high()
         
     def tick(self):
-        if self.get_arm_state() == "retract":
-            return InsideBot(self.ros_node)
-        return self
-    
-class InsideBot(Arm):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.inside_bot()
-        
-    def tick(self):
-        if self.finished_path(0):
-            return MoveIntakeCube(self.ros_node)
-        return self
-    
-class MoveIntakeCube(Shooter):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.intake()
-    def tick(self):
-        if self.finished_path(1):
-            return PrimeCube(self.ros_node)
-        return self
-    
-class PrimeCube(Shooter):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.prime_low()
-    def tick(self):
-        return StartBalancePath(self.ros_node)
-    
-class StartBalancePath(StartPath):
-    def initialize(self):
-        self.log_state()
-    
-    def execute_action(self):
-        self.start_paths(2)
-    
-    def tick(self):
-        if self.finished_path(2):
-            return Balance(self.ros_node)
-        return self
-     
-class Balance(AutoBalance):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.balance(reverse=True)
-        
-    def tick(self):
-        if self.is_balanced() and self.get_shooter_state() == "prime_low":
-            return WaitForChargerStabalize(self.ros_node)
-        return self
-    
-class WaitForChargerStabalize(State):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        pass
-        
-    def tick(self):
-        if self.check_timer(1.18):
-            return ShootCube(self.ros_node)
-        return self
-    
-class ShootCube(Shooter):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.shoot_low()
-    def tick(self):
-        if (self.get_shooter_state() == "shoot_low"):
+        if self.get_shooter_state() == "shoot_high":
             return IdleShooter(self.ros_node)
         return self
     
@@ -151,7 +52,117 @@ class IdleShooter(Shooter):
     def execute_action(self):
         self.idle()
     def tick(self):
-        return Final(self.ros_node)
+        return StartFirstPath(self.ros_node)
+    
+class StartFirstPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(0)
+    def tick(self):
+        return IntakeFirstCone(self.ros_node)
+    
+class IntakeFirstCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.tipped_intake()
+    def tick(self):
+        if self.finished_path(0):
+            return PreScoreFirstCone(self.ros_node)
+        return self
+    
+class PreScoreFirstCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.pre_score_high()
+    def tick(self):
+        return StartSecondPath(self.ros_node)
+    
+class StartSecondPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(1)
+    def tick(self):
+        if self.finished_path(1):
+            return AlignFirstCone(self.ros_node)
+        return self
+        
+class AlignFirstCone(Vision):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.align_cone()
+    def tick(self):
+        if self.is_vision_aligned() and self.get_arm_state() == "pre_score_high":
+            return FinishScoreFirstCone(self.ros_node)
+        return self
+    
+class FinishScoreFirstCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.finish_score_high()
+    def tick(self):
+        if self.get_arm_state() == "finish_score_high":
+            return RetractFirstCone(self.ros_node)
+        return self
+        
+class RetractFirstCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.retract()
+    def tick(self):
+        return StartThirdPath(self.ros_node)
+    
+class StartThirdPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(2, 3)
+    def tick(self):
+        return IntakeSecondCone(self.ros_node)
+    
+class IntakeSecondCone(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.tipped_intake()
+    def tick(self):
+        if self.get_arm_state() == "tipped_intake" and self.finished_path(3):
+            return StartFourthPath(self.ros_node)
+        return self
+    
+class StartFourthPath(StartPath):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.start_paths(4, 5)
+    def tick(self):
+        return ArmInsideBot(self.ros_node)
+    
+class ArmInsideBot(Arm):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.inside_bot()
+    def tick(self):
+        if self.finished_path(5):
+            return AlignSecondCone(self.ros_node)
+        return self
+    
+class AlignSecondCone(Vision):
+    def initialize(self):
+        self.log_state()
+    def execute_action(self):
+        self.align_cone()
+    def tick(self):
+        if self.is_vision_aligned():
+            return Final(self.ros_node)
+        return self
 
 class Final(State):
     """
@@ -191,7 +202,6 @@ def start(ros_node):
     ros_node.subscribe("/auto/balance/should_balance", Bool)
     ros_node.subscribe("/auto/arm/state", String)
     ros_node.subscribe("/auto/vision/state", String)
-    ros_node.subscribe("/auto/shooter/state", String)
 
     # Return the wanted Start and Shutdown state
     return Idle, Shutdown
