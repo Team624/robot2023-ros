@@ -134,16 +134,16 @@ class IntakeSecondCone(Arm):
         self.tipped_intake()
     def tick(self):
         if self.get_arm_state() == "tipped_intake" and self.finished_path(3):
-            return StartFourthPath(self.ros_node)
+            return ArmInsideBot(self.ros_node)
         return self
     
-class StartFourthPath(StartPath):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.start_paths(4, 5)
-    def tick(self):
-        return ArmInsideBot(self.ros_node)
+# class StartFourthPath(StartPath):
+#     def initialize(self):
+#         self.log_state()
+#     def execute_action(self):
+#         self.start_paths(4, 5)
+#     def tick(self):
+#         return ArmInsideBot(self.ros_node)
     
 class ArmInsideBot(Arm):
     def initialize(self):
@@ -151,19 +151,17 @@ class ArmInsideBot(Arm):
     def execute_action(self):
         self.inside_bot()
     def tick(self):
-        if self.finished_path(5):
-            return AlignSecondCone(self.ros_node)
-        return self
+        return Final(self.ros_node)
     
-class AlignSecondCone(Vision):
-    def initialize(self):
-        self.log_state()
-    def execute_action(self):
-        self.align_cone()
-    def tick(self):
-        if self.is_vision_aligned():
-            return Final(self.ros_node)
-        return self
+# class AlignSecondCone(Vision):
+#     def initialize(self):
+#         self.log_state()
+#     def execute_action(self):
+#         self.align_cone()
+#     def tick(self):
+#         if self.is_vision_aligned():
+#             return Final(self.ros_node)
+#         return self
 
 class Final(State):
     """
