@@ -27,6 +27,7 @@ class PrimeShooter(Shooter):
         self.log_state()
         
     def execute_action(self):
+        print("Running prime !")
         self.prime_high()
         
     def tick(self):

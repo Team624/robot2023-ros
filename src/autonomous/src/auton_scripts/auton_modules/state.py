@@ -135,7 +135,7 @@ class SetIdle(State):
         self.ros_node.publish("/auto/balance/set", String, "false false", latching = True)
         self.ros_node.publish("/auto/arm/set", String, "none", latching = True)
         self.ros_node.publish("/auto/vision/set", String, "none", latching = True)
-        self.ros_node.publish("/auto/shooter/set", String, "none")
+        self.ros_node.publish("/auto/shooter/set", String, "none", latching = True)
 
 class StartPath(State):
 
