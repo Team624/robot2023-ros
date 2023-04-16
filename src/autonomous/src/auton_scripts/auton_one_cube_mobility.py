@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 1
-auton_title = "1 Piece Mobility"
+auton_id = 11
+auton_title = "1 Cube Mobility"
 
 # Start of our states
 class Idle(SetIdle):
@@ -20,39 +20,38 @@ class Idle(SetIdle):
         self.setIdle()
 
     def tick(self):
-        return MoveFirstCone(self.ros_node)
+        return PrimeShooter(self.ros_node)
   
-class MoveFirstCone(Arm):
+class PrimeShooter(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.full_score_high()
+        print("Running prime !")
+        self.prime_high()
         
     def tick(self):
-        if self.get_arm_state() == "full_score_high":
-            return RetractArm(self.ros_node)
+        if self.get_shooter_state() == "prime_high":
+            return ShootHigh(self.ros_node)
         return self
-    
-class RetractArm(Arm):
+        
+class ShootHigh(Shooter):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.retract()
+        self.shoot_high()
         
     def tick(self):
-        if self.get_arm_state() == "retract":
-            return InsideBot(self.ros_node)
+        if self.get_shooter_state() == "shoot_high":
+            return IdleShooter(self.ros_node)
         return self
     
-class InsideBot(Arm):
+class IdleShooter(Shooter):
     def initialize(self):
         self.log_state()
-        
     def execute_action(self):
-        self.inside_bot()
-        
+        self.idle()
     def tick(self):
         return StartFirstPath(self.ros_node)
       

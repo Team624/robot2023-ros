@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter
 
 # The id of the auton, used for picking auton
-auton_id = 8
-auton_title = "1 Piece Engage"
+auton_id = 1
+auton_title = "1 Cone Mobility"
 
 # Start of our states
 class Idle(SetIdle):
@@ -54,14 +54,44 @@ class InsideBot(Arm):
         self.inside_bot()
         
     def tick(self):
-        return Balance(self.ros_node)
+        return StartFirstPath(self.ros_node)
+      
+class StartFirstPath(StartPath):
+  """
+  The state which publishes the first path to follow
+  """
+
+  def initialize(self):
+      self.log_state()
+
+  def execute_action(self):
+      self.start_paths(0)
+
+  def tick(self):
+      if self.finished_path(0):
+        if self.should_balance():
+          return Wait(self.ros_node)
+        return Final(self.ros_node)
+      return self
+
+class Wait(State):
+    def initialize(self):
+      self.log_state()
+
+    def execute_action(self):
+      pass
+
+    def tick(self):
+        if self.check_timer(1):
+            return Balance(self.ros_node)
+        return self
     
 class Balance(AutoBalance):
     def initialize(self):
         self.log_state()
         
     def execute_action(self):
-        self.balance()
+        self.balance(reverse=True)
         
     def tick(self):
         if self.is_balanced():
