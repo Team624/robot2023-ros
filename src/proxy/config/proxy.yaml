@@ -11,7 +11,8 @@ output_data: [{name: "/auto/balance/set", type: "string", default: "false false"
               {name: "/auto/vision/set", type: "string", default: "none"},
               {name: "/auto/num_autons", type: "number", default: 0},
               {name: "/auto/intake/set", type: "string", default: "aaa"},
-              {name: "/auto/shooter/set", type: "string", default: "idle"}]
+              {name: "/auto/shooter/set", type: "string", default: "idle"},
+              {name: "/auto/arm/slow", type: "boolean", default: false}]
 
 # Wanted Input Data ("number", "string", "boolean")
 input_data: [{name: "/auto/state", type: "boolean", default: false}, 
