@@ -3,8 +3,8 @@ from std_msgs.msg import Float32, String, Bool
 from .auton_modules.state import SetIdle, State, StartPath, AutoBalance, Arm, Shooter, Vision
 
 # The id of the auton, used for picking auton
-auton_id = 13
-auton_title = "3 Piece 2 Cubes"
+auton_id = 14
+auton_title = "3 Piece 2 Cubes (Red)"
 
 # Start of our states
 class Idle(SetIdle):
@@ -80,7 +80,7 @@ class InsideBot(Arm):
         self.inside_bot()
         
     def tick(self):
-        if self.get_arm_state() == "inside":
+        if self.get_arm_state() == "inside" or self.check_timer(1.5):
             return MoveIntakeFirstCube(self.ros_node)
         return self
     
@@ -138,7 +138,7 @@ class PrimeSecondCube(Shooter):
     def execute_action(self):
         self.prime_mid()
     def tick(self):
-        if self.finished_path(6):
+        if self.ros_node.get_time() >= 14:
             return ShootSecondCube(self.ros_node)
         return self
         

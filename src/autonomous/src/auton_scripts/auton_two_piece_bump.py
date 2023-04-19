@@ -104,30 +104,6 @@ class StartSecondPath(StartPath):
             return ShootCube(self.ros_node)
         return self
     
-class StartBalancePath(StartPath):
-    def initialize(self):
-        self.log_state()
-    
-    def execute_action(self):
-        self.start_paths(2)
-    
-    def tick(self):
-        if self.finished_path(2):
-            return Balance(self.ros_node)
-        return self
-     
-class Balance(AutoBalance):
-    def initialize(self):
-        self.log_state()
-        
-    def execute_action(self):
-        self.balance()
-        
-    def tick(self):
-        if self.is_balanced():
-            return Final(self.ros_node)
-        return self
-    
 class ShootCube(Shooter):
     def initialize(self):
         self.log_state()
@@ -144,11 +120,9 @@ class IdleShooter(Shooter):
     def execute_action(self):
         self.idle()
     def tick(self):
-        if (self.should_balance()):
-            return StartBalancePath(self.ros_node)
-        return Final(self.ros_node)
+        return StartThirdPath(self.ros_node)
               
-class StartBalancePath(StartPath):
+class StartThirdPath(StartPath):
     def initialize(self):
         self.log_state()
     
@@ -157,11 +131,9 @@ class StartBalancePath(StartPath):
     
     def tick(self):
         if self.finished_path(2):
-            return Balance(self.ros_node)
+            return Final(self.ros_node)
         return self
     
-
-
 class Final(State):
     """
     The state which indicates that there are no limitations on device
